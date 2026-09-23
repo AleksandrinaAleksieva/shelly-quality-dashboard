@@ -1,0 +1,11 @@
+{
+  "name": "shelly-quality-dashboard",
+  "private": true,
+  "description": "Weekly-refreshed Jira defect-quality dashboard for Shelly FW/FE, published via GitHub Pages.",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "node scripts/fetch-and-build.js"
+  }
+}

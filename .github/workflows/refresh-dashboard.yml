@@ -1,0 +1,64 @@
+name: Refresh Quality Dashboard
+
+on:
+  schedule:
+    # Every Tuesday at 09:00 UTC = 12:00 in Sofia during EEST (UTC+3, roughly
+    # late March - late October). During EET (UTC+2, winter months) this lands
+    # at 11:00 Sofia time instead, since GitHub Actions cron is fixed UTC and
+    # does not follow local daylight-saving changes. Adjust the hour below
+    # (e.g. to "0 10 * * 2") if you'd rather it stay pinned to 13:00 EET / 12:00 EEST,
+    # or leave as-is and accept the one-hour drift twice a year.
+    - cron: '0 9 * * 2'
+  workflow_dispatch: {} # lets you trigger a manual run from the Actions tab, for testing
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch fresh Jira data and regenerate dashboard
+        env:
+          JIRA_BASE_URL: ${{ secrets.JIRA_BASE_URL }}
+          JIRA_EMAIL: ${{ secrets.JIRA_EMAIL }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+        run: node scripts/fetch-and-build.js
+
+      - name: Commit regenerated dashboard
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs/index.html
+          if git diff --cached --quiet; then
+            echo "No data changes since last run — nothing to commit."
+          else
+            git commit -m "chore: weekly dashboard refresh ($(date -u +%Y-%m-%d))"
+            git push
+          fi
+
+      - name: Set up GitHub Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload docs/ as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

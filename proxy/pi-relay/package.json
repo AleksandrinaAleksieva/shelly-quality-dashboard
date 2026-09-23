@@ -1,0 +1,12 @@
+{
+  "name": "shelly-quality-dashboard-relay",
+  "private": true,
+  "description": "Read-only Jira relay for the Shelly Quality Dashboard's Live data mode, meant to run on a Raspberry Pi under PM2.",
+  "engines": {
+    "node": ">=18"
+  },
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}

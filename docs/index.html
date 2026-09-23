@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Shelly Quality Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#12161C; --panel:#1A1F28; --panel2:#1F2530; --line:#2C3340; --line-soft:#242A35;
+    --text:#EDEFF3; --sub:#9BA3B4; --dim:#6B7385;
+    --amber:#E8A33D; --teal:#3FB6A8; --red:#E2604F; --green:#59C27C; --violet:#8E7CE8; --auto:#C77DFF; --blue:#5B9EE8;
+    --grad: linear-gradient(135deg, #E8A33D 0%, #E2604F 100%);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.disp{font-family:'Space Grotesk',sans-serif;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:1320px; margin:0 auto; padding:0 28px 80px;}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); font-weight:600;}
+
+  /* header */
+  header{border-bottom:1px solid var(--line); background:linear-gradient(180deg, #161B23 0%, #12161C 100%); position:sticky; top:0; z-index:20; backdrop-filter: blur(6px);}
+  .hdr-inner{max-width:1320px; margin:0 auto; padding:18px 28px; display:flex; align-items:center; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .brand .mark{width:34px; height:34px; border-radius:9px; background:var(--grad); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; color:#12161C;}
+  .brand-text .t{font-size:16px; font-weight:700;}
+  .brand-text .s{font-size:12px; color:var(--dim);}
+  .hdr-meta{display:flex; gap:22px; align-items:center; font-size:12px; color:var(--dim);}
+  .hdr-meta b{color:var(--sub); font-weight:600;}
+  .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green); display:inline-block; box-shadow:0 0 0 3px rgba(89,194,124,.18); margin-right:6px;}
+
+  /* tabs */
+  .tabbar{max-width:1320px; margin:0 auto; padding:0 28px; display:flex; gap:4px; overflow-x:auto; border-bottom:1px solid var(--line);}
+  .tab-btn{background:none; border:none; color:var(--dim); font-family:'Inter'; font-size:13.5px; font-weight:600; padding:13px 16px; cursor:pointer; border-bottom:2px solid transparent; white-space:nowrap; transition:.15s;}
+  .tab-btn:hover{color:var(--sub);}
+  .tab-btn.active{color:var(--text); border-bottom-color:var(--amber);}
+  .tab-panel{display:none; padding-top:28px; animation:fade .25s ease;}
+  .tab-panel.active{display:block;}
+  @keyframes fade{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;}}
+
+  section{margin-bottom:34px;}
+  .sec-head{display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:14px; flex-wrap:wrap;}
+  .sec-head h2{font-size:19px; margin:0 0 4px;}
+  .sec-head p{margin:0; font-size:13px; color:var(--sub); max-width:640px;}
+
+  .callout{border:1px solid var(--line); border-left:3px solid var(--amber); background:var(--panel); border-radius:8px; padding:14px 16px; font-size:13px; color:var(--sub); line-height:1.6; margin-bottom:18px;}
+  .callout.teal{border-left-color:var(--teal);}
+  .callout.red{border-left-color:var(--red);}
+  .callout b{color:var(--text);}
+  .callout .eyebrow{margin-bottom:5px; display:block;}
+
+  /* headline banner */
+  .banner{border:1px solid var(--line); border-radius:16px; padding:26px 28px; background:radial-gradient(1200px 200px at 0% 0%, rgba(232,163,61,.10), transparent), var(--panel); display:flex; justify-content:space-between; gap:28px; flex-wrap:wrap; align-items:center; margin-bottom:22px;}
+  .banner-left .eyebrow{color:var(--amber);}
+  .banner-left .ver{font-size:34px; font-weight:700; margin:4px 0 6px; display:flex; align-items:center; gap:10px;}
+  .badge{font-size:10.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 9px; border-radius:20px; background:rgba(89,194,124,.14); color:var(--green); border:1px solid rgba(89,194,124,.3);}
+  .badge.beta{background:rgba(94,158,232,.14); color:var(--blue); border-color:rgba(94,158,232,.3);}
+  .banner-left .desc{font-size:13px; color:var(--sub); max-width:480px;}
+  .banner-stats{display:flex; gap:26px; flex-wrap:wrap;}
+  .bstat{text-align:right;}
+  .bstat .n{font-size:24px; font-weight:700; font-family:'Space Grotesk';}
+  .bstat .l{font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; margin-top:2px;}
+
+  /* KPI grid */
+  .kpi-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px;}
+  .kpi{border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:18px 20px; position:relative; overflow:hidden;}
+  .kpi:before{content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--accent, var(--amber));}
+  .kpi .eyebrow{margin-bottom:8px;}
+  .kpi .val{font-size:30px; font-weight:700; font-family:'Space Grotesk'; display:flex; align-items:baseline; gap:8px;}
+  .kpi .val .unit{font-size:14px; color:var(--dim); font-weight:500;}
+  .kpi .sub{font-size:12px; color:var(--sub); margin-top:6px; line-height:1.5;}
+  .kpi .delta{font-size:11.5px; font-weight:600; margin-top:8px; display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:20px;}
+  .delta.up{color:var(--red); background:rgba(226,96,79,.12);}
+  .delta.down{color:var(--green); background:rgba(89,194,124,.12);}
+  .delta.flat{color:var(--dim); background:rgba(155,163,180,.1);}
+
+  /* cards / panels */
+  .grid2{display:grid; grid-template-columns:1.1fr .9fr; gap:16px;}
+  .grid3{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+  @media(max-width:900px){.grid2,.grid3{grid-template-columns:1fr;}}
+  .card{border:1px solid var(--line); background:var(--panel); border-radius:12px; padding:20px;}
+  .card h3{font-size:14px; margin:0 0 4px;}
+  .card .hint{font-size:12px; color:var(--dim); margin-bottom:14px;}
+  .chart-wrap{position:relative; height:230px;}
+
+  /* controls */
+  .controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px;}
+  select, input[type=text]{background:var(--panel2); border:1px solid var(--line); color:var(--text); font-family:'Inter'; font-size:13px; padding:9px 12px; border-radius:8px; outline:none;}
+  select:focus, input:focus{border-color:var(--amber);}
+  .ctrl-label{font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); font-weight:600; margin-right:2px;}
+  .ctrl-group{display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--line); padding:6px 12px 6px 14px; border-radius:9px;}
+  .toggle-row{display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+  .toggle-row button{background:var(--panel2); border:none; color:var(--sub); font-size:12.5px; font-weight:600; padding:8px 14px; cursor:pointer;}
+  .toggle-row button.active{background:var(--amber); color:#1a1206;}
+
+  /* table */
+  table{width:100%; border-collapse:collapse; font-size:13px;}
+  th{text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.04em; color:var(--dim); font-weight:600; padding:9px 10px; border-bottom:1px solid var(--line); cursor:pointer; user-select:none;}
+  th:hover{color:var(--sub);}
+  td{padding:10px 10px; border-bottom:1px solid var(--line-soft); color:var(--sub);}
+  tr:hover td{background:rgba(255,255,255,.02);}
+  td.key{color:var(--text); font-family:'IBM Plex Mono'; font-size:12px;}
+  .pill{display:inline-block; font-size:11px; font-weight:600; padding:2px 9px; border-radius:20px;}
+  .pill.support{background:rgba(226,96,79,.14); color:var(--red);}
+  .pill.qa{background:rgba(63,182,168,.14); color:var(--teal);}
+  .pill.auto{background:rgba(199,125,255,.14); color:var(--auto);}
+  .pill.po{background:rgba(232,163,61,.14); color:var(--amber);}
+  .pill.dev{background:rgba(94,158,232,.14); color:var(--blue);}
+  .pill.other{background:rgba(155,163,180,.14); color:var(--sub);}
+  .sev-dot{display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:7px;}
+  .empty-row{text-align:center; color:var(--dim); padding:26px; font-size:13px;}
+
+  footer{max-width:1320px; margin:40px auto 0; padding:20px 28px; border-top:1px solid var(--line); font-size:12px; color:var(--dim); display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  a{color:var(--amber);}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; font-size:12px; color:var(--sub); margin-top:12px;}
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:9px; height:9px; border-radius:2px; display:inline-block;}
+
+  /* settings */
+  .icon-btn{width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:var(--panel2); color:var(--sub); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:.15s;}
+  .icon-btn:hover{color:var(--text); border-color:var(--amber);}
+  .icon-btn svg{width:17px; height:17px;}
+  .modal-overlay{position:fixed; inset:0; background:rgba(9,11,15,.65); backdrop-filter:blur(3px); display:none; align-items:flex-start; justify-content:center; z-index:100; padding:64px 16px; overflow-y:auto;}
+  .modal-overlay.open{display:flex;}
+  .modal{width:100%; max-width:460px; background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:24px; box-shadow:0 20px 60px rgba(0,0,0,.4);}
+  .modal h2{font-size:17px; margin:0 0 4px;}
+  .modal .modal-sub{font-size:12.5px; color:var(--sub); margin:0 0 18px; line-height:1.6;}
+  .modal label{display:block; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--dim); font-weight:600; margin:14px 0 6px;}
+  .modal input[type=text], .modal input[type=password], .modal input[type=email]{width:100%; background:var(--panel2); border:1px solid var(--line); color:var(--text); font-family:'IBM Plex Mono',monospace; font-size:12.5px; padding:10px 12px; border-radius:8px; outline:none;}
+  .modal input:focus{border-color:var(--amber);}
+  .modal .row-btns{display:flex; gap:10px; margin-top:20px;}
+  .btn{flex:1; padding:10px 14px; border-radius:8px; border:1px solid var(--line); background:var(--panel2); color:var(--text); font-family:'Inter'; font-size:13px; font-weight:600; cursor:pointer; transition:.15s;}
+  .btn:hover{border-color:var(--amber);}
+  .btn.primary{background:var(--grad); border:none; color:#1a1206;}
+  .btn.primary:disabled{opacity:.55; cursor:default;}
+  .btn.ghost{background:none; color:var(--sub);}
+  .modal-status{font-size:12px; margin-top:12px; padding:9px 11px; border-radius:8px; line-height:1.5; display:none;}
+  .modal-status.show{display:block;}
+  .modal-status.ok{background:rgba(89,194,124,.12); color:var(--green); border:1px solid rgba(89,194,124,.28);}
+  .modal-status.err{background:rgba(226,96,79,.12); color:var(--red); border:1px solid rgba(226,96,79,.28);}
+  .modal-status.pending{background:rgba(94,158,232,.12); color:var(--blue); border:1px solid rgba(94,158,232,.28);}
+  .modal-note{font-size:11.5px; color:var(--dim); line-height:1.6; margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft);}
+  .modal-note b{color:var(--sub);}
+  .live-dot.off{background:var(--dim); box-shadow:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-inner">
+    <div class="brand">
+      <div class="mark" aria-label="Shelly logo" style="background:#fff;">
+        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAAADhCAMAAAAJbSJIAAAAYFBMVEX///9FlNE5j8+yzulBktA2js8wjM6jxuYsis3q8vnK3e/f6/bC2e650+vz+PzU5POMueCbwuRPmdN1rNvR4vKry+iEtN6TveJuqNmHtt/y9/xgodbk7/jb6PVantVmpNg+AremAAAIHElEQVR4nO2d65arKBCFBwQ0Rs3Fa9okvv9bjknmnLbTUTcCksyqb37NOmvZ7gAFVVSV//xDEARBEARBEARBEARBEARBEARBEARBEARB/P/52sZJedhXeXsUXEa/kVwc26aqw3S38f2yepyLoG6OQvZwLu6w1zz+kXOpWFenZ98vjrBN606qh7ARVaNauWJVkvlWMMU2yEU/8fSUPcmUskvfVGRRH5WRur8qpay2vtX8YlsLaUPdH5GqufiW9IP02o+eNXkPjVH1NnM1C7m0q+4/jSrwLe1BybkLfTdk8wbDGB+l5ek5RAjfG2SWK4f6bki/RnVn0XqOILjPUQxdD+Bd4tGfwEq519fDK18CG2cm9Imo8CMwX0sgE60XgZXGJv9wj16DrGTl4wAXwGuwP0az3sU9hK85ARJFvb7ASwTq4zKPv6aelEPmeC1d3xwxfULuJ+X1PxU2F9ZRNSAErYyYXUANtqOuIWpIhlkZIWaDSztwOa+hakiNDaHazT6pAw9FK4gaAg4h388+qUAt8gqqhpTYEMr5AGiLnmtXUDXkCL2X6GYfFMOb6gqqBpyxvZCXs0+6wq7JCrIGoJN01s4k+MFvDV3fgFuYml2G2Gz3oBD066O552gM4boKz6B5mFWID6GY33dsgv70cwpTfAhX9p5AQzO7DvEgFrDvWOUAKpyxpRpDGK3sAIOHUsanQ/IMHkK+tv+LOOU3xGnqKQE8hOK6lrI/VKjCyTgnvAoFn/Gh7YMqnDx5o+aKCbV+VB+dpUwm4w+Bh1B6CLPt4fk1vhDhKAjzcWmB7hZMiLFHZKg5br1cH6ZwrHv0KLKPlJLfDOPD3/RLcN3D2l9i2M7zcOQRm835vL1cdkURx0mSpGkQlGV4OBzqen86VVWeN03XXuNVdX2Dnrx97GR2yHCvTvm+ol7IFVY4Ok3fHHhD9Hp9awJuTFn0mdN0i19u84Pvl10G7tl96jTFrvzuAFcX70iAL8RpJ/FtOWuEAZXvl10GHoFgMvX9souAHaj142SWwO+MPvbkprEQP3RLhGM1U37wW6NzqTIVrnljNHLaPtTWaBxrPvT4jYcyPETl7aCR/vyhtkZj0/9QW3PRSS9tfL/tIjTSDFj0YcWTD+C7FfapEakvjbPph7r6Gic3P4naxsB5hexjt0QdW8N9v+wiNMI1QJLbO4LeAt5YOavJFnh4n4lVM9O+NttLESdpsIRhYAmsJLizhjXdFEG4z69CcKn6/+RYmc4k0Y+YhIatcRzMuHU5EJG6XSJrBAJfEf3I/UATDpjLTT+LD62U2g0cxt7zp7++0QkNOzmbboKOS5t18urpah0tl+jh9kPDWdra7gIg8qe/oXGVKGxXgm4rbr2KXPDn9JYMt6aW94td46IG+UW1qs5Fm8WA1NmJPha9WEkaebAWF+I+clJD/rJJhYaXaO0qccecVCCLkXASXLlkbUcM3QygECNpnhrBjF92ahE6FdYa+tRojxGNxAwrHpSTJgBCigkjoZGRbsHUdA4ECnWdfDN8v7AQyqgsC7y5ITKfadmAe/q/TkTahAaNOB5ND+QQFbHuMN+RYrteWYHGmn/6y/3pnHWnQ5km8TfFGTR9GhlShgrxgswndXm5MylpwP2LyGy7wItQBvokq41NOFolZOwiaru4gkdzVgQC96DMWj7pXJTc9aljaCfVH499m235evEXEdnrS7iBFSqTKVNorULZWAyagB0WTBXqXDqzaL5SXgd4+hjNUp1bkudwkinw3zap0sKrPPoRtJ03AG/EJnEMjSwsbj1rt4V/WwPjjQefHSS3wGNocomI3zg7SBpA16FRGKNBBbLIflUtakuNvCc4HuSgfR28HxpNH7C5mJNLLthBlCa7FCrQRYoZbMelyQLBFdq/ikW9J7N4KTxLHWTOo+WIZoEo/Fhh/Z4SjuublUDBIT37fYfRuxnD27UaVmi9nSvYNco0WgoHLWdaqugDn/kN18cOtdjWq+XgXi6GecJ4ApblFDo4hGGcMQQHLY0OFr9BTZx5qjcc0rObVZ6gQxgZ2/AM7etrFg564gsN0tpoOg57iDazPlCXRggLoVn8XsZeE3e4Z7myct7HbyqlJTcfvlG39JvioWemrEjM4T3YVloifgfEpHlOctbC1hvotgsCu1D9vOkMl36M5wRabKuwhXeMm3UzSozY42llVgPQqY5E2S7+bWONtCvLEfZa5wZKqGaRxkujkdb5KtvPCL2UqLlUmVdo5XWKyH67Ls2sLyFZqGPpklYnr3M0Gc6IvWbOieCqAb/Ft7t9O07j0fzqpmtlqZ0924vswmJa5SaphF5OvMOOecWC9PVbeldbp5dXM/ZrF5yuSvfLf5w77JiXdctSMG/FNOrYVfWhDII0TdKwPuVXGS34JqVQjr/RpD9Tv9/tx2d9FhaicOa85eHGTS47qG+dhi2J04/2TTD/8RxrBML2dzMRfVG1Zu19KZxkfY/L46pau49Jel1vPfb7pdb5yBY7B/VPr+Cq9da3LEvbyPGKFErWfj+muQk66Wwk+9mZ++r4O+Qrze0WWz7UcaXyN/pS+C7spNlnwX+oE1Jda0+fl5xgV+ZCGg/mTd1xn6ze0x9lkxwarpaVP9+L3VVXp+/fVGdTlPuW3YRCSu8H8t6HulZh8n4fdp8gO8dBXTVHGak/7d8Hjd/v/38vn1HH5hSmxfsP3DjZ+VIkQRmG9f7e9r2qTvu6PoRlkMaX89suOIIgCIIgCIIgCIIgCIIgCIIgCIIgCIIgCPv8C1IGbOg3LHmJAAAAAElFTkSuQmCC" alt="Shelly" style="width:22px; height:22px; object-fit:contain; display:block;">
+      </div>
+      <div class="brand-text">
+        <div class="t">Quality Dashboard</div>
+        <div class="s">Shelly &middot; FW &amp; FE projects &middot; shellyusa.atlassian.net</div>
+      </div>
+    </div>
+    <div class="hdr-meta">
+      <span><span class="live-dot" id="liveDot"></span><span id="liveLabel">Weekly snapshot</span></span>
+      <span>Fetched <b id="fetchedAt">just now</b></span>
+      <span>Scope <b>issuetype = Bug</b></span>
+      <button class="icon-btn" id="settingsBtn" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      </button>
+    </div>
+  </div>
+  <div class="tabbar">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="versions">Version Explorer</button>
+    <button class="tab-btn" data-tab="escape">Escape Rate</button>
+    <button class="tab-btn" data-tab="devices">Devices &amp; Components</button>
+    <button class="tab-btn" data-tab="notes">Data Notes</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+<!-- ============ OVERVIEW ============ -->
+<div class="tab-panel active" id="tab-overview">
+
+  <section>
+    <div class="banner">
+      <div class="banner-left">
+        <span class="eyebrow">Latest tracked firmware version</span>
+        <div class="ver" id="bannerLatestVer">2.0.1-beta3 <span class="badge beta">pre-release</span></div>
+        <div class="desc">Newest option added to the Firmware Version field. Pulled dynamically &mdash; this label updates the moment a newer version is logged against a bug.</div>
+      </div>
+      <div class="banner-stats">
+        <div class="bstat"><div class="n" id="latestCount">4</div><div class="l">Bugs on <span id="latestVerLabel">2.0.1-beta3</span></div></div>
+        <div class="bstat"><div class="n" id="latestEscape">50%</div><div class="l">Escape rate (this version)</div></div>
+        <div class="bstat"><div class="n" id="bannerPrevVer">2.0.1-beta2</div><div class="l">Previous version</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Portfolio headline</h2>
+        <p>All open + closed issues of type Bug, current totals across both projects.</p>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi" style="--accent:var(--amber)">
+        <span class="eyebrow">Total bugs logged</span>
+        <div class="val" id="kpiTotalBugs">1,218</div>
+        <div class="sub" id="kpiTotalBugsSub">FW 522 &middot; FE 696 &mdash; every issue with issuetype = Bug, all statuses.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--red)">
+        <span class="eyebrow">Defect escape rate &mdash; this month</span>
+        <div class="val" id="kpiEscapeRate">42.2<span class="unit">%</span></div>
+        <div class="sub" id="kpiEscapeRateSub">35 of 83 bugs logged since Sep 1 have <b style="color:var(--text)">Issued by = Support</b>. This month is 100% tagged, so it's the most trustworthy read &mdash; the all-time figure (74.3%) is inflated by years of untagged bugs. See the Escape Rate tab for why.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--auto)">
+        <span class="eyebrow">Found by QA Automation</span>
+        <div class="val" id="kpiQaAuto">15</div>
+        <div class="sub">FW bugs with Issued by = <b style="color:var(--text)">QA Automation</b>, caught by automated test suites before reaching a human tester.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--teal)">
+        <span class="eyebrow">Firmware-version tagged</span>
+        <div class="val" id="kpiVerTagged">28</div>
+        <div class="sub" id="kpiVerTaggedSub">FW bugs with the new Firmware Version field populated, spanning 12 distinct version values so far.</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="grid2">
+      <div class="card">
+        <h3>Latest vs. previous version &mdash; quality comparison</h3>
+        <div class="hint">2.0.1-beta3 (latest) vs. 2.0.1-beta2 (previous), broken down by who found the bug. Small samples &mdash; read as a directional signal, not a verdict.</div>
+        <div class="chart-wrap" style="height:210px;"><canvas id="compareChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Reading the comparison</h3>
+        <div class="hint">What moved between versions</div>
+        <div id="compareNarrative" style="font-size:13px; color:var(--sub); line-height:1.7;"></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="grid2">
+      <div class="card">
+        <h3>Issued by &mdash; Firmware (FW)</h3>
+        <div class="hint">Who first logged the bug. Support = reached a real customer; everything else was caught internally.</div>
+        <div class="chart-wrap"><canvas id="fwPie"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Issued by &mdash; Front End (FE)</h3>
+        <div class="hint">Same breakdown for the FE project.</div>
+        <div class="chart-wrap"><canvas id="fePie"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="callout">
+      <span class="eyebrow">What's measuring what</span>
+      <b>Escape rate</b> uses <span class="mono">Issued by</span> as a proxy for where a defect was caught: <b>Support</b> means a customer hit it first (escaped to production); QA, QA Automation, PO, Development, Integrations, Front End, Back End and Documentation all mean it was caught before release. Issues with <b>Issued by</b> left empty are excluded from the percentage and shown separately as "untriaged."
+    </div>
+  </section>
+</div>
+
+<!-- ============ VERSION EXPLORER ============ -->
+<div class="tab-panel" id="tab-versions">
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Firmware version explorer</h2>
+        <p>Pick a version to see its bugs, filtered further by device and component. The dropdown is built from every version value that currently has at least one bug against it &mdash; pulled live from the Firmware Version field.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Version</span>
+        <select id="verSelect"></select>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Device</span>
+        <select id="verDeviceFilter"><option value="">All devices</option></select>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Component</span>
+        <select id="verComponentFilter"><option value="">All components</option></select>
+      </div>
+    </div>
+
+    <div class="kpi-grid" style="margin-bottom:18px;">
+      <div class="kpi" style="--accent:var(--amber)">
+        <span class="eyebrow" id="vk-title">Bugs on selected version</span>
+        <div class="val" id="vk-count">0</div>
+        <div class="sub" id="vk-sub">&nbsp;</div>
+      </div>
+      <div class="kpi" style="--accent:var(--red)">
+        <span class="eyebrow">Escape rate</span>
+        <div class="val" id="vk-escape">0<span class="unit">%</span></div>
+        <div class="sub">Support-reported ÷ categorized bugs on this version.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--teal)">
+        <span class="eyebrow">Distinct devices affected</span>
+        <div class="val" id="vk-devices">0</div>
+        <div class="sub">Unique hardware models with at least one bug on this version.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--violet)">
+        <span class="eyebrow">Distinct components</span>
+        <div class="val" id="vk-components">0</div>
+        <div class="sub">Unique Shelly Component values touched on this version.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Matching bugs</h3>
+      <div class="hint">Every issue tagged with the selected version, filtered by device / component if chosen above.</div>
+      <table id="verTable">
+        <thead><tr><th>Key</th><th>Summary</th><th>Device</th><th>Component</th><th>Issued by</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ============ ESCAPE RATE ============ -->
+<div class="tab-panel" id="tab-escape">
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Why the all-time rate looks so high &mdash; and what to trust instead</h2>
+        <p>Short answer: exclude untagged bugs <i>and</i> measure recent months separately. Excluding untagged bugs alone isn't enough &mdash; the old backlog is so sparsely tagged that what's left over is still a small, skewed sample.</p>
+      </div>
+    </div>
+    <div class="callout red">
+      <span class="eyebrow">What's actually happening</span>
+      "Issued by" tagging discipline has changed sharply over time. In <b style="color:var(--text)">July</b>, only 57 of 158 bugs (36%) had the field set at all &mdash; too little and too skewed toward Support (who gets auto-tagged via the support intake process) to trust. By <b style="color:var(--text)">August</b> that jumped to 82% tagged. Since <b style="color:var(--text)">September 1</b>, it's <b style="color:var(--text)">100%</b> &mdash; every single new bug has Issued by set. The all-time 74.3% figure blends all of that together, so it mostly reflects old data-entry gaps, not current quality.
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Escape rate by month</h3>
+        <div class="hint">Support ÷ categorized bugs, per month. Bar opacity reflects field-completion confidence &mdash; July is shown faded because only 36% of its bugs were tagged.</div>
+        <div class="chart-wrap" style="height:240px;"><canvas id="monthlyChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Field completion by month</h3>
+        <div class="hint">Share of bugs created that month with Issued by populated at all &mdash; the thing that makes a month's escape rate trustworthy.</div>
+        <table style="margin-top:4px;">
+          <thead><tr><th>Month</th><th>Bugs created</th><th>Tagged</th><th>Completion</th><th>Escape rate</th></tr></thead>
+          <tbody id="monthlyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="callout teal">
+      <span class="eyebrow">Recommendation</span>
+      Use <b>trailing-month escape rate</b> (currently <span id="recoRate">42.2%</span>, from <span id="recoMonth">September</span>) as the headline number going forward, not the all-time figure &mdash; that's what the Overview tab now shows. Keep watching field completion each month; once 2&ndash;3 more fully-tagged months land, a rolling 3-month average will be more stable than any single month. The all-time and customizable views below are still useful for historical/audit purposes, just not as the primary KPI.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Customizable escape rate (all-time)</h2>
+        <p>Toggle which "Issued by" values count as "escaped to production." Support is on by default; switch others on to see how the rate shifts. Uses the full history &mdash; see the caveat above.</p>
+      </div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Categories counted as "escaped"</h3>
+        <div class="hint">Combined FW + FE, all bugs with Issued by set (untriaged bugs excluded from every calculation below).</div>
+        <div id="categoryList"></div>
+      </div>
+      <div class="card">
+        <h3>Resulting escape rate</h3>
+        <div class="chart-wrap" style="height:180px;"><canvas id="escapeGauge"></canvas></div>
+        <div style="text-align:center; margin-top:-6px;">
+          <div class="val" id="escapeVal" style="font-size:36px; font-family:'Space Grotesk'; font-weight:700;">32.6%</div>
+          <div class="sub" id="escapeDetail" style="font-size:12px;">397 of 1,218 categorized bugs</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Escape rate by device (firmware-version-tagged bugs)</h2>
+        <p>Devices with the highest share of Support-reported bugs are the ones where problems are reaching customers before internal QA catches them.</p>
+      </div>
+    </div>
+    <div class="card">
+      <table id="deviceEscapeTable">
+        <thead><tr><th>Device</th><th>Bugs</th><th>Support</th><th>Internally caught</th><th>Escape rate</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="legend">
+        <span><i style="background:var(--red)"></i>&ge; 50% escape rate</span>
+        <span><i style="background:var(--amber)"></i>20&ndash;49%</span>
+        <span><i style="background:var(--teal)"></i>&lt; 20%</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ DEVICES & COMPONENTS ============ -->
+<div class="tab-panel" id="tab-devices">
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Hardware-related bugs opened by Support &mdash; per device</h2>
+        <p>Every FW bug with <b style="color:var(--text)">Issued by = Support</b>, grouped purely by hardware device. This is the full Support backlog across all firmware versions combined &mdash; not scoped or filtered by version, so it reflects which physical devices customers report problems on most, independent of which firmware they were running.</p>
+      </div>
+    </div>
+    <div class="callout" style="margin-bottom:18px;">
+      <span class="eyebrow">Note on the HW project</span>
+      Shelly's Jira also has a separate <b style="color:var(--text)">HW &mdash; "Hardware Team"</b> project. It does not track defects the way FW/FE do: of its 263 items, 217 are "Task" and 2 are "Story" &mdash; zero use the "Bug" issue type, and the "Issued by" field (the backbone of every escape-rate number on this page) has never been set on any of them. It's used as a hardware board/module engineering backlog (e.g. "Shelly ESP32 C5 Vert Module...", "Requirements file for BK7239N"), not a bug tracker. Its current status split: <b style="color:var(--text)">157 Done</b>, <b style="color:var(--text)">52 In Progress</b>, <b style="color:var(--text)">54 To Do</b>. Because it has no defect data, hardware-related <i>bug</i> statistics come from FW instead (below), where Support-reported issues are tagged with a Device field &mdash; that's what this section shows.
+    </div>
+    <div class="kpi-grid" style="margin-bottom:18px;">
+      <div class="kpi" style="--accent:var(--red)">
+        <span class="eyebrow">Support-reported FW bugs (all-time)</span>
+        <div class="val" id="supportStatTotal">188</div>
+        <div class="sub">Every FW bug with Issued by = Support, any status, any version.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--amber)">
+        <span class="eyebrow">Attributed to a device</span>
+        <div class="val" id="supportStatWithDevice">114</div>
+        <div class="sub" id="supportStatWithDeviceSub">Has the Device field populated &mdash; the other 74 have no device tagged.</div>
+      </div>
+      <div class="kpi" style="--accent:var(--teal)">
+        <span class="eyebrow">Distinct devices reported on</span>
+        <div class="val" id="supportStatDistinct">47</div>
+        <div class="sub">Unique hardware models with at least one Support-reported bug.</div>
+      </div>
+    </div>
+    <div class="card">
+      <h3>Top devices by Support-reported bug count</h3>
+      <div class="hint">All-time, all firmware versions combined. Sorted highest to lowest.</div>
+      <div class="chart-wrap" style="height:520px;"><canvas id="supportDeviceChart"></canvas></div>
+    </div>
+    <div class="callout red" style="margin-top:14px;">
+      <span class="eyebrow">Reading this chart</span>
+      Devices at the top of this list are generating the most customer-reported hardware issues overall. Because it's not version-scoped, a device can rank high here simply from being on the market longer or shipping in higher volume &mdash; pair it with the Version Explorer tab to see whether a device's Support bugs are concentrated in old firmware (already fixed) or the current release.
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Bugs by device (firmware-version-tagged)</h2>
+        <p>Firmware-version-tagged bugs grouped by hardware device. Use the toggle to view all versions combined or a single version.</p>
+      </div>
+      <div class="toggle-row" id="devScopeToggle">
+        <button class="active" data-scope="all">All versions</button>
+        <button data-scope="one">Single version</button>
+      </div>
+    </div>
+    <div class="controls" id="devVersionWrap" style="display:none;">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Version</span>
+        <select id="devVersionSelect"></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-wrap" style="height:320px;"><canvas id="deviceBarChart"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Bugs by component</h2>
+        <p>Shelly Component field, versioning-aware &mdash; pick a version to see which subsystems are generating defects there.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Version</span>
+        <select id="compVersionSelect"><option value="">All versions</option></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-wrap" style="height:320px;"><canvas id="componentBarChart"></canvas></div>
+    </div>
+  </section>
+</div>
+
+<!-- ============ DATA NOTES ============ -->
+<div class="tab-panel" id="tab-notes">
+  <section>
+    <div class="sec-head"><div><h2>What each metric measures</h2></div></div>
+    <div class="grid3">
+      <div class="card"><h3>Issued by</h3><div class="hint" style="line-height:1.7;">Required select field on every FW/FE Bug. <b style="color:var(--text)">Support</b> = a customer hit it (escaped to prod). <b style="color:var(--text)">QA / QA Automation / PO / Development / Integrations / Front End / Back End / Documentation</b> = caught internally before release. This is the backbone of every "escape rate" number on this dashboard.</div></div>
+      <div class="card"><h3>Firmware Version</h3><div class="hint" style="line-height:1.7;"><span class="mono">customfield_13320</span>. As of this rebuild it's a clean multiselect of predefined version strings (no more free text). An issue can carry more than one version if it was verified as reproducing across a regression window &mdash; that issue is then counted once per version it's tagged with.</div></div>
+      <div class="card"><h3>Shelly Component</h3><div class="hint" style="line-height:1.7;"><span class="mono">customfield_13319</span>. Subsystem/protocol tag (Zigbee, MQTT, Matter, HTTP, Schedule, etc). Used for the Component filters on the Version Explorer and Devices tabs. Distinct from the "Feature" field, which is not currently surfaced here.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="callout teal">
+      <span class="eyebrow">Field migration note</span>
+      The Firmware Version field used to be free text (<span class="mono">customfield_13220</span>) with inconsistent formats and unreliable JQL text search &mdash; a version like "2.0.1" would sometimes return 0 results despite being visibly present on issues. That field has been superseded by a clean predefined-values field (<span class="mono">customfield_13320</span>), which this entire dashboard is now built on. The old field is no longer used here; its historical data isn't included since it can't be reliably reconciled with the new one.
+    </div>
+    <div class="callout">
+      <span class="eyebrow">Coverage</span>
+      28 of 522 FW bugs currently carry a Firmware Version tag &mdash; this field is still being adopted retroactively, so version-scoped numbers above cover a growing subset, not the full backlog. All portfolio-level totals (headline KPIs, Issued-by pies, escape rate) use the full 522/696 bug counts regardless of version tagging.
+    </div>
+    <div class="callout red">
+      <span class="eyebrow">Platform limitation</span>
+      Shelly's Jira plan doesn't expose an API for creating dashboard gadgets or custom fields, so this page is generated as a standalone snapshot rather than a native Jira dashboard. It reflects data pulled live from Jira at the time stated in the header &mdash; ask to "reload the data" for a fresh pull any time.
+    </div>
+  </section>
+</div>
+
+</div>
+
+<footer>
+  <span>Source: shellyusa.atlassian.net &middot; fetched via Atlassian Rovo connector</span>
+  <span>Built as a standalone snapshot &mdash; no native Jira dashboard-gadget API available on the current plan</span>
+</footer>
+
+<div class="modal-overlay" id="settingsOverlay">
+  <div class="modal">
+    <h2>Live data settings</h2>
+    <p class="modal-sub">Connect your own Jira account to refresh every number on this page with data as of right now, instead of the last weekly snapshot. Your token stays in <b style="color:var(--sub)">this browser only</b> &mdash; it's saved to this device's local storage and sent, with each request, straight to the read-only relay below. It is never sent anywhere else and never leaves this browser except to that relay.</p>
+
+    <label for="setJiraEmail">Jira account email</label>
+    <input type="email" id="setJiraEmail" placeholder="you@shelly.com" autocomplete="username">
+
+    <label for="setJiraToken">Jira API token</label>
+    <input type="password" id="setJiraToken" placeholder="paste your Atlassian API token" autocomplete="current-password">
+
+    <label for="setProxyUrl">Read-only relay URL</label>
+    <input type="text" id="setProxyUrl" placeholder="https://your-relay.example.workers.dev">
+
+    <div class="row-btns">
+      <button class="btn ghost" id="settingsClear">Forget &amp; sign out</button>
+      <button class="btn" id="settingsClose">Cancel</button>
+      <button class="btn primary" id="settingsSave">Save &amp; refresh live</button>
+    </div>
+    <div class="modal-status" id="settingsStatus"></div>
+
+    <div class="modal-note">
+      <b>Where do I get a token?</b> id.atlassian.com &rarr; Security &rarr; API tokens &rarr; Create token, using the Jira account you want the dashboard to query as.<br><br>
+      <b>What's the relay URL?</b> Browsers can't call Jira's API directly (Jira blocks cross-site requests), so a small read-only relay forwards your request and adds your own token &mdash; it never stores it. See the repo README for a one-click relay you can deploy under your own account. Without a relay URL, this page stays on the weekly snapshot.<br><br>
+      <b>Scope:</b> this phase is read-only &mdash; it refreshes the charts and tables you see here. Publishing to Confluence or creating Jira tickets from this page is a planned next phase, not available yet.
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Chart registry — every Chart.js instance created anywhere on
+   this page is tracked here so a live-data refresh can destroy
+   and rebuild all of them cleanly.
+   ============================================================ */
+let ALL_CHARTS = [];
+function safeChart(fn){ try{ const c = fn(); if(c) ALL_CHARTS.push(c); return c; } catch(e){ console.warn('Chart render skipped:', e.message); return null; } }
+function destroyAllCharts(){ ALL_CHARTS.forEach(c=>{ try{ c.destroy(); }catch(e){} }); ALL_CHARTS = []; deviceBarChart = null; componentBarChart = null; escapeGauge = null; }
+
+if(typeof Chart !== 'undefined'){
+  Chart.defaults.color = '#9BA3B4';
+  Chart.defaults.font.family = "'Inter', sans-serif";
+  Chart.defaults.font.size = 12;
+  Chart.defaults.borderColor = '#2C3340';
+}
+
+const COLORS = {support:'#E2604F', qa:'#3FB6A8', po:'#E8A33D', dev:'#5B9EE8', integrations:'#8E7CE8', auto:'#C77DFF', other:'#6B7385', empty:'#3A4150'};
+
+/* ============================================================
+   Data — seeded from the weekly GitHub Actions snapshot below.
+   All of these are `let`, not `const`: the settings-page live
+   refresh (bottom of this file) reassigns them from a fresh
+   Jira pull and calls renderDashboard() again.
+   ============================================================ */
+/* GENDATA:FETCHED_AT:START */
+let FETCHED_AT_ISO = "2026-09-23T18:44:00Z";
+/* GENDATA:FETCHED_AT:END */
+
+/* ---------- Portfolio-level issued-by totals (all FW / FE bugs) ---------- */
+/* GENDATA:TOTALS:START */
+let FW_ISSUED = {Support:188, QA:36, PO:13, Development:11, Integrations:2, 'QA Automation':15, Other:1, Empty:256};
+let FE_ISSUED = {Support:209, QA:41, PO:2, Other:16, Empty:428};
+let FW_TOTAL = 522, FE_TOTAL = 696;
+/* GENDATA:TOTALS:END */
+
+/* ---------- Firmware-version-tagged issue-level dataset (28 FW bugs) ---------- */
+/* versions[] can hold >1 entry when an issue was verified across a regression window */
+/* GENDATA:ISSUES:START */
+let ISSUES = [
+ {key:'FW-2961', summary:'BLU Button 4 ZB - HA ZHA exposes no button trigger entities', device:'BLU RC Button 4 ZB', component:['Zigbee'], versions:['1.0.1'], issuedBy:'Support', status:'Open'},
+ {key:'FW-2962', summary:'BLU TRV intermittently unreachable in Zigbee mode', device:'BLU TRV', component:['Zigbee'], versions:['1.5.0'], issuedBy:'Support', status:'Closed'},
+ {key:'FW-2944', summary:'[BLU TRV] Add capacitor charging delay before motor activation', device:'BLU TRV', component:['BluTrv'], versions:['1.5.0'], issuedBy:'PO', status:'Closed'},
+ {key:'FW-2959', summary:'[WS90][Zigbee2MQTT] Sensor measurements not reported after pairing', device:'WS90 7-in-1 weather station', component:['Zigbee'], versions:['1.6.0'], issuedBy:'Support', status:'Open'},
+ {key:'FW-2948', summary:'[Neo Smart Water Valve] restore_last ignored; valve closes after reboot', device:'Neo smart water valve', component:['Switch'], versions:['1.7.4-xt1-prod0'], issuedBy:'Support', status:'To Do'},
+ {key:'FW-3044', summary:'[ShellyX][NEO Water Valve] Range Extender DNS/Cloud/port-forward fail', device:'Neo smart water valve', component:['WiFi'], versions:['1.7.99-xt-prod0'], issuedBy:'Support', status:'Open'},
+ {key:'FW-3054', summary:'[H&T Gen3] Periodic sensor report every ~6 min instead of 5', device:'Shelly H&T Gen3', component:['Temperature'], versions:['2.0.0'], issuedBy:'QA', status:'Open'},
+ {key:'FW-3051', summary:'[H&T Gen3] Both mutually exclusive temperature webhooks trigger', device:'Shelly H&T Gen3', component:['Webhook'], versions:['2.0.0'], issuedBy:'QA', status:'Open'},
+ {key:'FW-2990', summary:'[EM Mini Gen4] Core dump loop after reboot following OTA', device:'EM Mini Gen4', component:['EM'], versions:['2.0.0'], issuedBy:'QA', status:'Closed'},
+ {key:'FW-2982', summary:'[Flood S Gen4] Zigbee stops reporting after standby', device:'Flood S Gen4', component:['Zigbee'], versions:['2.0.0'], issuedBy:'Support', status:'In Progress'},
+ {key:'FW-3005', summary:'[Schedule] Cron validation fails for valid cron expression', device:'1 Gen3', component:['Schedule'], versions:['2.0.1-beta1'], issuedBy:'Development', status:'Open'},
+ {key:'FW-2995', summary:'[Plug S Gen3] Matter Identify cluster missing after fw update', device:'Plug S Gen3', component:['Matter'], versions:['2.0.1-beta1','2.0.0','1.7.5'], issuedBy:'Support', status:'Open'},
+ {key:'FW-2992', summary:'[3EM-63W Gen3] Incorrect timestamps via Modbus TCP', device:'Shelly 3EM-63 Gen3', component:['Modbus'], versions:['2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'Open'},
+ {key:'FW-2991', summary:'[Pro Dimmer 1PM] Lights flicker/dim incorrectly after fw update', device:'Pro Dimmer 1PM', component:['Shelly'], versions:['2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'Closed'},
+ {key:'FW-2984', summary:'[Gen4] Zigbee incoming ZCL/unicast commands fail', device:'Dimmer Gen4', component:['Zigbee'], versions:['2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'In Progress'},
+ {key:'FW-3035', summary:'[Pro EM-50][MQTT] Timeout disconnects, delayed reconnects', device:'Pro EM', component:['MQTT'], versions:['2.0.1-beta2'], issuedBy:'Support', status:'To Do'},
+ {key:'FW-3023', summary:'[ProSensorAddOn] Output counters enabled but not shown in Web UI', device:'Pro Sensor Add-on', component:['ProSensorAddon'], versions:['2.0.1-beta2'], issuedBy:'QA', status:'Open'},
+ {key:'FW-3021', summary:'[EM Gen3] Randomly reboots / core dumps, reset_reason 7', device:'EM Gen3', component:['EM1','MQTT','Script','System (Sys)'], versions:['2.0.1-beta2','2.0.1-beta1','2.0.0','1.7.5'], issuedBy:'Support', status:'To Do'},
+ {key:'FW-3016', summary:'Shelly.PutHTTPServerCert returns restart_required:false', device:'Lock General', component:['HTTP'], versions:['2.0.1-beta2','2.0.0'], issuedBy:'QA', status:'Closed'},
+ {key:'FW-3008', summary:'[Power Strip Gen4][Zigbee] Apparent power reports active power', device:'Power Strip 4 Gen4', component:['Zigbee'], versions:['2.0.1-beta2','2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'Open'},
+ {key:'FW-2986', summary:'LNM: Light.Set with unchanged brightness still sends TX', device:'Bulb RGB Gen3 / Dimmer Gen4', component:['CCT','Light','RGBCCT','RGBW','LNM'], versions:['2.0.1-beta2'], issuedBy:'QA', status:'Closed'},
+ {key:'FW-2983', summary:'S1G4ZB core dump after power cycle', device:'1 Gen4', component:['Zigbee'], versions:['2.0.1-beta2'], issuedBy:'QA Automation', status:'Open'},
+ {key:'FW-3048', summary:'Plug US Gen4 - Metering freezes and device reboots', device:'Plug US Gen4', component:['PM1'], versions:['2.0.1-beta3','2.0.1-beta2','2.0.0'], issuedBy:'Support', status:'To Do'},
+ {key:'FW-3047', summary:'[2.0.1-beta3] Pro3EM CSV export fails for longer periods', device:'Pro 3EM', component:['EMData'], versions:['2.0.1-beta3'], issuedBy:'Support', status:'To Do'},
+ {key:'FW-3046', summary:'Coredump after BTHome.AddDevice without active scan', device:'1 Gen4', component:['Bluetooth Low Energy (BLE)'], versions:['2.0.1-beta3'], issuedBy:'QA Automation', status:'Open'},
+ {key:'FW-3042', summary:'[Shelly IR Controller] Incorrect IR code repeat handling', device:'Shelly IR Controller Gen4', component:['IRCode'], versions:['2.0.1-beta3'], issuedBy:'QA', status:'Closed'},
+ {key:'FW-2960', summary:'[Shelly Camera] Auth causes local Web UI/API failures + RTSP 5XX', device:'Shelly Camera', component:['Camera'], versions:['2.1.99-cameraprod7'], issuedBy:'Support', status:'Closed'},
+ {key:'FW-2957', summary:'[Camera] Unable to open third RTSP stream', device:'Shelly Camera', component:['Camera'], versions:['2.1.99-cameraprod8'], issuedBy:'QA', status:'Open'},
+];
+/* GENDATA:ISSUES:END */
+
+/* ---------- Support-reported HW defects, per device, all-time / all versions (188 FW bugs, not scoped to version-tagged subset) ---------- */
+/* GENDATA:SUPPORT_BY_DEVICE:START */
+let SUPPORT_BY_DEVICE = [
+  {device:"Plug US Gen4", count:8}, {device:"2PM Gen4", count:8}, {device:"Presence Gen4", count:8},
+  {device:"BLU TRV", count:7}, {device:"Pro 3EM", count:6}, {device:"Dimmer Gen4", count:6},
+  {device:"Plug S Gen3", count:4}, {device:"1PM Gen4", count:4}, {device:"Flood Gen4", count:4},
+  {device:"BLU Gateway Gen3", count:4}, {device:"Neo smart water valve", count:3}, {device:"Pro EM", count:3},
+  {device:"Power Strip 4 Gen4", count:3}, {device:"2PM Gen3", count:3}, {device:"Pro Dimmer 2PM", count:3},
+  {device:"Pro 4PM V3", count:3}, {device:"BLU H&T Display", count:3}, {device:"EM Gen3", count:2},
+  {device:"WS90 7-in-1 weather station", count:2}, {device:"Plug PM Gen3", count:2}, {device:"Shelly H&T Gen3", count:2},
+  {device:"1 Gen4", count:2}, {device:"SPVR Powered by Shelly", count:2}, {device:"Dimmer Gen3", count:2},
+  {device:"BLU Remote Control", count:2}, {device:"DALI Dimmer Gen3", count:2}, {device:"Shelly 3EM-63 Gen3", count:1},
+  {device:"Pro Dimmer 1PM", count:1}, {device:"Flood S Gen4", count:1}, {device:"BLU RC Button 4 ZB", count:1},
+  {device:"Shelly Camera", count:1}, {device:"1PM Gen3", count:1}, {device:"Pro CB", count:1},
+  {device:"Wall Dimmer", count:1}, {device:"EM Mini Gen4", count:1}, {device:"Pro RGBWW PM", count:1},
+  {device:"Ogemray 25A Relay", count:1}, {device:"Plus Uni", count:1}, {device:"PM Mini Gen3", count:1},
+  {device:"1 Gen3", count:1}, {device:"Plus Smoke", count:1}, {device:"Pro 1", count:1},
+  {device:"Pro Sensor Add-on", count:1}, {device:"BLU Door/Window ZB", count:1}, {device:"Bulb Duo Gen3", count:1},
+  {device:"BLU Wall Switch 4 ZB", count:1}, {device:"Plug M Gen3", count:1},
+]; // sums to 119 tag-occurrences across 114 device-tagged issues (a few bugs affect 2 devices); 74 of 188 Support bugs have no device set
+/* GENDATA:SUPPORT_BY_DEVICE:END */
+/* GENDATA:SUPPORT_STATS:START */
+let SUPPORT_STATS = { total: 188, withDevice: 114, distinctDevices: 47 };
+/* GENDATA:SUPPORT_STATS:END */
+
+/* mainline version order, newest first (matches Firmware Version field's own option order) */
+/* GENDATA:VERSIONS:START */
+let MAINLINE_ORDER = ['2.0.1-beta3','2.0.1-beta2','2.0.1-beta1','2.0.0','1.7.99-xt-prod0','1.7.5','1.7.4-xt1-prod0','1.6.0','1.5.0','1.0.1'];
+/* GENDATA:VERSIONS:END */
+
+/* ---------- Monthly trend (data-quality-aware) ---------- */
+/* GENDATA:MONTHLY:START */
+let MONTHLY = [
+  {month:'Jul 2026', total:158, tagged:57, support:52, completion:36, lowConfidence:true},
+  {month:'Aug 2026', total:173, tagged:141, support:66, completion:82, lowConfidence:false},
+  {month:'Sep 2026 (to date)', total:83, tagged:83, support:35, completion:100, lowConfidence:false},
+];
+/* GENDATA:MONTHLY:END */
+
+let IS_LIVE = false; // becomes true once a settings-page live refresh succeeds
+
+/* ============================================================
+   Pure helpers — safe to call any time, always read current data
+   ============================================================ */
+function pillClass(v){
+  if(v==='Support') return 'support';
+  if(v==='QA Automation') return 'auto';
+  if(v==='QA') return 'qa';
+  if(v==='PO') return 'po';
+  if(v==='Development') return 'dev';
+  if(v==='Integrations') return 'integrations';
+  return 'other';
+}
+function colorFor(v){
+  const m={Support:COLORS.support, QA:COLORS.qa, PO:COLORS.po, Development:COLORS.dev, Integrations:COLORS.integrations, 'QA Automation':COLORS.auto, Other:COLORS.other};
+  return m[v] || COLORS.other;
+}
+function fmtN(n){ return Number(n).toLocaleString(); }
+function issuesForVersion(v){ return ISSUES.filter(i => i.versions.includes(v)); }
+function versionsWithData(){
+  const set = new Set();
+  ISSUES.forEach(i => i.versions.forEach(v => set.add(v)));
+  const list = Array.from(set);
+  list.sort((a,b)=>{
+    const ia = MAINLINE_ORDER.indexOf(a), ib = MAINLINE_ORDER.indexOf(b);
+    if(ia===-1 && ib===-1) return b.localeCompare(a);
+    if(ia===-1) return 1;
+    if(ib===-1) return -1;
+    return ia-ib;
+  });
+  return list;
+}
+function escapeStats(list){
+  const support = list.filter(i=>i.issuedBy==='Support').length;
+  const total = list.length;
+  return {support, total, pct: total? Math.round(support/total*1000)/10 : 0};
+}
+function tally(list){
+  const t = {Support:0, QA:0, 'QA Automation':0, Other:0};
+  list.forEach(i=>{ if(t[i.issuedBy]!==undefined) t[i.issuedBy]++; else t.Other++; });
+  return t;
+}
+function pieData(obj){
+  const entries = Object.entries(obj).filter(([k])=>k!=='Empty');
+  return {
+    labels: entries.map(([k])=>k),
+    data: entries.map(([,v])=>v),
+    colors: entries.map(([k])=> k==='QA Automation'?COLORS.auto : k==='Support'?COLORS.support : k==='QA'?COLORS.qa : k==='PO'?COLORS.po : k==='Development'?COLORS.dev : k==='Integrations'?COLORS.integrations : COLORS.other)
+  };
+}
+function makePie(canvasId, obj){
+  const d = pieData(obj);
+  safeChart(() => new Chart(document.getElementById(canvasId), {
+    type:'doughnut',
+    data:{ labels:d.labels, datasets:[{data:d.data, backgroundColor:d.colors, borderColor:'#1A1F28', borderWidth:2}] },
+    options:{responsive:true, maintainAspectRatio:false, cutout:'62%',
+      plugins:{legend:{position:'bottom', labels:{boxWidth:10, padding:10, font:{size:11}}},
+        tooltip:{callbacks:{label:(c)=> `${c.label}: ${c.raw} bugs`}}}
+    }
+  }));
+}
+function countBy(list, keyFn){
+  const map = {};
+  list.forEach(i=>{ (Array.isArray(keyFn(i))?keyFn(i):[keyFn(i)]).forEach(k=>{ map[k]=(map[k]||0)+1; }); });
+  return map;
+}
+function severityColor(pct){ if(pct>=50) return 'var(--red)'; if(pct>=20) return 'var(--amber)'; return 'var(--teal)'; }
+
+/* ============================================================
+   State shared between the render pass and the interactive
+   controls (toggle buttons, dropdowns) that re-render a single
+   chart without doing a full renderDashboard() pass.
+   ============================================================ */
+let LATEST, PREVIOUS, verOrder = [], CATS = [];
+let deviceBarChart, componentBarChart, escapeGauge;
+
+function recalcEscape(){
+  const catListEl = document.getElementById('categoryList');
+  const checks = catListEl.querySelectorAll('input[type=checkbox]');
+  let escaped = 0, totalCategorized = 0;
+  CATS.forEach(c => totalCategorized += c.count);
+  checks.forEach(ch=>{ if(ch.checked) escaped += CATS[ch.dataset.idx].count; });
+  const pct = totalCategorized ? Math.round(escaped/totalCategorized*1000)/10 : 0;
+  document.getElementById('escapeVal').textContent = pct + '%';
+  document.getElementById('escapeDetail').textContent = `${fmtN(escaped)} of ${fmtN(totalCategorized)} categorized bugs`;
+  if(escapeGauge) safeChart(() => escapeGauge.destroy());
+  escapeGauge = safeChart(() => new Chart(document.getElementById('escapeGauge'), {
+    type:'doughnut',
+    data:{ labels:['Escaped','Internal'], datasets:[{data:[escaped, totalCategorized-escaped], backgroundColor:[COLORS.support,'#2C3340'], borderWidth:0}] },
+    options:{responsive:true, maintainAspectRatio:false, cutout:'75%', rotation:-90, circumference:180,
+      plugins:{legend:{display:false}, tooltip:{enabled:false}}}
+  }));
+}
+
+function buildDeviceEscape(){
+  const map = {};
+  ISSUES.forEach(i=>{
+    i.device.split(' / ').forEach(dev=>{
+      if(!map[dev]) map[dev] = {support:0, total:0};
+      map[dev].total++;
+      if(i.issuedBy==='Support') map[dev].support++;
+    });
+  });
+  const rows = Object.entries(map).map(([device,v])=>({device, support:v.support, internal:v.total-v.support, total:v.total, pct: Math.round(v.support/v.total*1000)/10}));
+  rows.sort((a,b)=> b.pct-a.pct || b.total-a.total);
+  const tbody = document.querySelector('#deviceEscapeTable tbody');
+  tbody.innerHTML = rows.map(r=>`
+    <tr>
+      <td style="color:var(--text)">${r.device}</td>
+      <td class="mono">${r.total}</td>
+      <td class="mono">${r.support}</td>
+      <td class="mono">${r.internal}</td>
+      <td><span class="sev-dot" style="background:${severityColor(r.pct)}"></span><b style="color:${severityColor(r.pct)}">${r.pct}%</b></td>
+    </tr>`).join('');
+}
+
+function renderVersionExplorer(){
+  const verSelect = document.getElementById('verSelect');
+  const verDeviceFilter = document.getElementById('verDeviceFilter');
+  const verComponentFilter = document.getElementById('verComponentFilter');
+  const v = verSelect.value;
+  const devF = verDeviceFilter.value;
+  const compF = verComponentFilter.value;
+  let list = issuesForVersion(v);
+  if(devF) list = list.filter(i=>i.device.includes(devF));
+  if(compF) list = list.filter(i=>i.component.includes(compF));
+
+  document.getElementById('vk-title').textContent = `Bugs on ${v}`;
+  document.getElementById('vk-count').textContent = list.length;
+  document.getElementById('vk-sub').textContent = devF||compF ? `Filtered by ${[devF,compF].filter(Boolean).join(' + ')}` : 'No device/component filter applied';
+  const es = escapeStats(list);
+  document.getElementById('vk-escape').innerHTML = es.pct + '<span class="unit">%</span>';
+  document.getElementById('vk-devices').textContent = new Set(list.flatMap(i=>i.device.split(' / '))).size;
+  document.getElementById('vk-components').textContent = new Set(list.flatMap(i=>i.component)).size;
+
+  const tbody = document.querySelector('#verTable tbody');
+  if(list.length===0){
+    tbody.innerHTML = `<tr><td colspan="6" class="empty-row">No bugs match this combination of version / device / component.</td></tr>`;
+  } else {
+    tbody.innerHTML = list.map(i=>`
+      <tr>
+        <td class="key">${i.key}</td>
+        <td>${i.summary}</td>
+        <td>${i.device}</td>
+        <td>${i.component.join(', ')}</td>
+        <td><span class="pill ${pillClass(i.issuedBy)}">${i.issuedBy}</span></td>
+        <td>${i.status}</td>
+      </tr>`).join('');
+  }
+}
+
+function renderDeviceBar(scope, version){
+  const list = scope==='all' ? ISSUES : issuesForVersion(version);
+  const map = countBy(list, i=>i.device.split(' / '));
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(deviceBarChart) safeChart(() => deviceBarChart.destroy());
+  deviceBarChart = safeChart(() => new Chart(document.getElementById('deviceBarChart'), {
+    type:'bar',
+    data:{ labels:entries.map(e=>e[0]), datasets:[{label:'Bugs', data:entries.map(e=>e[1]), backgroundColor:'#E8A33D', borderRadius:5}] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, y:{grid:{display:false}}}
+    }
+  }));
+}
+
+function renderComponentBar(version){
+  const list = version ? issuesForVersion(version) : ISSUES;
+  const map = countBy(list, i=>i.component);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  if(componentBarChart) safeChart(() => componentBarChart.destroy());
+  componentBarChart = safeChart(() => new Chart(document.getElementById('componentBarChart'), {
+    type:'bar',
+    data:{ labels:entries.map(e=>e[0]), datasets:[{label:'Bugs', data:entries.map(e=>e[1]), backgroundColor:'#3FB6A8', borderRadius:5}] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, y:{grid:{display:false}}}
+    }
+  }));
+}
+
+/* ============================================================
+   renderDashboard() — the one function that turns whatever is
+   currently in FW_ISSUED / ISSUES / SUPPORT_BY_DEVICE / MONTHLY /
+   etc. into what's on screen. Called once on page load with the
+   weekly snapshot, and again after every successful live refresh.
+   ============================================================ */
+function renderDashboard(){
+  destroyAllCharts();
+
+  // header
+  document.getElementById('fetchedAt').textContent = new Date(FETCHED_AT_ISO).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+  const liveDot = document.getElementById('liveDot'), liveLabel = document.getElementById('liveLabel');
+  if(IS_LIVE){ liveDot.classList.remove('off'); liveLabel.textContent = 'Live from your Jira'; }
+  else { liveDot.classList.add('off'); liveLabel.textContent = 'Weekly snapshot'; }
+
+  LATEST = MAINLINE_ORDER[0]; PREVIOUS = MAINLINE_ORDER[1];
+
+  // ---- Overview: latest vs previous compare chart ----
+  const latestIssues = issuesForVersion(LATEST), prevIssues = issuesForVersion(PREVIOUS);
+  const latestTally = tally(latestIssues), prevTally = tally(prevIssues);
+  document.getElementById('latestCount').textContent = latestIssues.length;
+  const latestEsc = escapeStats(latestIssues), prevEsc = escapeStats(prevIssues);
+  document.getElementById('latestEscape').textContent = latestEsc.pct + '%';
+
+  safeChart(() => new Chart(document.getElementById('compareChart'), {
+    type:'bar',
+    data:{
+      labels:['Support','QA','QA Automation','Other'],
+      datasets:[
+        {label:PREVIOUS, data:[prevTally.Support,prevTally.QA,prevTally['QA Automation'],prevTally.Other], backgroundColor:'#3A4150', borderRadius:5, barPercentage:.6},
+        {label:LATEST, data:[latestTally.Support,latestTally.QA,latestTally['QA Automation'],latestTally.Other], backgroundColor:COLORS.support, borderRadius:5, barPercentage:.6},
+      ]
+    },
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom', labels:{boxWidth:10, padding:14}}},
+      scales:{y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, x:{grid:{display:false}}}
+    }
+  }));
+
+  document.getElementById('compareNarrative').innerHTML = `
+    <p><b style="color:var(--text)">${LATEST}</b> has ${latestIssues.length} tagged bugs so far (${latestEsc.support} Support-reported) &mdash; escape rate <b style="color:var(--text)">${latestEsc.pct}%</b>.</p>
+    <p><b style="color:var(--text)">${PREVIOUS}</b> has ${prevIssues.length} tagged bugs (${prevEsc.support} Support-reported) &mdash; escape rate <b style="color:var(--text)">${prevEsc.pct}%</b>.</p>
+    <p>Compare volume and escape rate between the two most recent versions to see whether quality is trending up or down as the release matures. Small samples on a brand-new version are directional, not conclusive.</p>
+  `;
+
+  makePie('fwPie', FW_ISSUED);
+  makePie('fePie', FE_ISSUED);
+
+  safeChart(() => new Chart(document.getElementById('monthlyChart'), {
+    type:'bar',
+    data:{
+      labels: MONTHLY.map(m=>m.month),
+      datasets:[{
+        label:'Escape rate %',
+        data: MONTHLY.map(m=> m.tagged ? Math.round(m.support/m.tagged*1000)/10 : 0),
+        backgroundColor: MONTHLY.map(m=> m.lowConfidence ? 'rgba(226,96,79,.35)' : COLORS.support),
+        borderRadius:6, barPercentage:.55,
+      }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label:(c)=>{
+          const m = MONTHLY[c.dataIndex];
+          return [`${c.raw}% escape rate (${m.support} of ${m.tagged} tagged bugs)`, `${m.completion}% of ${m.total} bugs that month had Issued by set`];
+        }}}
+      },
+      scales:{ y:{beginAtZero:true, max:100, ticks:{callback:(v)=>v+'%'}, grid:{color:'#242A35'}}, x:{grid:{display:false}} }
+    }
+  }));
+
+  // ---- Escape rate tab: customizable checkboxes ----
+  const COMBINED = {};
+  ['Support','QA','PO','Development','Integrations','QA Automation','Other'].forEach(k=>{
+    COMBINED[k] = (FW_ISSUED[k]||0) + (FE_ISSUED[k]||0);
+  });
+  CATS = [
+    {name:'Support', count:COMBINED.Support, defaultOn:true, desc:'Reported by a real customer via Support'},
+    {name:'QA', count:COMBINED.QA, defaultOn:false, desc:'Caught by manual QA testing'},
+    {name:'QA Automation', count:COMBINED['QA Automation'], defaultOn:false, desc:'Caught by automated test suites'},
+    {name:'PO', count:COMBINED.PO, defaultOn:false, desc:'Flagged by Product Owner review'},
+    {name:'Development', count:COMBINED.Development, defaultOn:false, desc:'Found by engineering during development'},
+    {name:'Integrations', count:COMBINED.Integrations, defaultOn:false, desc:'Found during third-party integration testing'},
+    {name:'Other', count:COMBINED.Other, defaultOn:false, desc:'Front End / Back End / Documentation / misc'},
+  ];
+  const catListEl = document.getElementById('categoryList');
+  catListEl.innerHTML = '';
+  CATS.forEach((c,idx)=>{
+    const row = document.createElement('label');
+    row.style.cssText='display:flex; align-items:center; justify-content:space-between; padding:10px 4px; border-bottom:1px solid var(--line-soft); cursor:pointer; font-size:13px;';
+    row.innerHTML = `
+      <span style="display:flex; align-items:center; gap:10px;">
+        <input type="checkbox" data-idx="${idx}" ${c.defaultOn?'checked':''} style="accent-color:var(--amber); width:15px; height:15px;">
+        <span><span class="pill ${pillClass(c.name)}" style="margin-right:8px;">${c.name}</span><span style="color:var(--dim); font-size:12px;">${c.desc}</span></span>
+      </span>
+      <span class="mono" style="color:var(--sub);">${fmtN(c.count)}</span>`;
+    catListEl.appendChild(row);
+  });
+  recalcEscape();
+  buildDeviceEscape();
+
+  // ---- Version Explorer ----
+  verOrder = versionsWithData();
+  const verSelect = document.getElementById('verSelect');
+  verSelect.innerHTML = '';
+  verOrder.forEach((v)=>{
+    const opt = document.createElement('option');
+    opt.value = v;
+    opt.textContent = v + (v===LATEST? '  (latest)' : v===PREVIOUS? '  (previous)' : '');
+    verSelect.appendChild(opt);
+  });
+
+  const allDevices = Array.from(new Set(ISSUES.flatMap(i=>i.device.split(' / ')))).sort();
+  const allComponents = Array.from(new Set(ISSUES.flatMap(i=>i.component))).sort();
+  const verDeviceFilter = document.getElementById('verDeviceFilter');
+  verDeviceFilter.innerHTML = '<option value="">All devices</option>';
+  allDevices.forEach(d=>{ const o=document.createElement('option'); o.value=d; o.textContent=d; verDeviceFilter.appendChild(o); });
+  const verComponentFilter = document.getElementById('verComponentFilter');
+  verComponentFilter.innerHTML = '<option value="">All components</option>';
+  allComponents.forEach(c=>{ const o=document.createElement('option'); o.value=c; o.textContent=c; verComponentFilter.appendChild(o); });
+
+  verSelect.value = LATEST;
+  renderVersionExplorer();
+
+  // ---- Devices & Components tab ----
+  safeChart(() => new Chart(document.getElementById('supportDeviceChart'), {
+    type:'bar',
+    data:{
+      labels: SUPPORT_BY_DEVICE.map(d=>d.device),
+      datasets:[{label:'Support-reported bugs', data: SUPPORT_BY_DEVICE.map(d=>d.count), backgroundColor:COLORS.support, borderRadius:4}]
+    },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{display:false}, tooltip:{callbacks:{label:(c)=> `${c.raw} Support-reported bug${c.raw===1?'':'s'}`}}},
+      scales:{x:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, y:{grid:{display:false}, ticks:{font:{size:11}}}}
+    }
+  }));
+
+  document.getElementById('devVersionWrap').style.display = 'none';
+  document.querySelectorAll('#devScopeToggle button').forEach(b=>b.classList.remove('active'));
+  document.querySelector('#devScopeToggle button[data-scope="all"]').classList.add('active');
+  const devVersionSelect = document.getElementById('devVersionSelect');
+  devVersionSelect.innerHTML = '';
+  verOrder.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; devVersionSelect.appendChild(o); });
+  devVersionSelect.value = LATEST;
+  renderDeviceBar('all');
+
+  const compVersionSelect = document.getElementById('compVersionSelect');
+  compVersionSelect.innerHTML = '<option value="">All versions</option>';
+  verOrder.forEach(v=>{ const o=document.createElement('option'); o.value=v; o.textContent=v; compVersionSelect.appendChild(o); });
+  compVersionSelect.value = '';
+  renderComponentBar('');
+
+  // ---- Hydrate static headline/table text ----
+  hydrateStaticText(latestIssues, prevIssues);
+}
+
+/* ---------- Hydrate static headline/table text from the current data ---------- */
+function hydrateStaticText(){
+  const setText = (id, val) => { const el = document.getElementById(id); if(el) el.textContent = val; };
+  const fmt = (n) => Number(n).toLocaleString();
+
+  setText('bannerLatestVer', LATEST);
+  const verBadge = MAINLINE_ORDER.length && /beta|alpha|rc|prod\d*$|xt/i.test(LATEST) ? ' <span class="badge beta">pre-release</span>' : ' <span class="badge">stable</span>';
+  document.getElementById('bannerLatestVer').insertAdjacentHTML('beforeend', verBadge);
+  setText('latestVerLabel', LATEST);
+  setText('bannerPrevVer', PREVIOUS);
+
+  const allTotal = FW_TOTAL + FE_TOTAL;
+  setText('kpiTotalBugs', fmt(allTotal));
+  setText('kpiTotalBugsSub', `FW ${fmt(FW_TOTAL)} · FE ${fmt(FE_TOTAL)} — every issue with issuetype = Bug, all statuses.`);
+
+  const curMonth = MONTHLY[MONTHLY.length - 1];
+  const curMonthPct = curMonth.tagged ? Math.round(curMonth.support / curMonth.tagged * 1000) / 10 : 0;
+  setText('kpiEscapeRate', curMonthPct);
+  document.getElementById('kpiEscapeRate').insertAdjacentHTML('beforeend', '<span class="unit">%</span>');
+  document.getElementById('kpiEscapeRateSub').innerHTML =
+    `${curMonth.support} of ${curMonth.tagged} bugs logged in ${curMonth.month} have <b style="color:var(--text)">Issued by = Support</b>. ` +
+    `That month is ${curMonth.completion}% tagged, so it's the most trustworthy read — see the Escape Rate tab for the full picture.`;
+
+  setText('kpiQaAuto', fmt(FW_ISSUED['QA Automation'] || 0));
+  setText('kpiVerTagged', fmt(ISSUES.length));
+  setText('kpiVerTaggedSub', `FW bugs with the new Firmware Version field populated, spanning ${versionsWithData().length} distinct version values so far.`);
+
+  const tbody = document.getElementById('monthlyTableBody');
+  if(tbody){
+    tbody.innerHTML = MONTHLY.map(m=>{
+      const pct = m.tagged ? Math.round(m.support / m.tagged * 1000) / 10 : 0;
+      const compClass = m.completion >= 90 ? 'support' : m.completion >= 60 ? 'po' : 'other';
+      const rateLabel = m.lowConfidence ? `${pct}% (low-confidence)` : `${pct}%`;
+      const rateStyle = m.lowConfidence ? 'style="color:var(--dim)"' : 'style="color:var(--text)"';
+      return `<tr><td style="color:var(--text)">${m.month}</td><td class="mono">${fmt(m.total)}</td><td class="mono">${fmt(m.tagged)}</td><td><span class="pill ${compClass}">${m.completion}%</span></td><td class="mono" ${rateStyle}>${rateLabel}</td></tr>`;
+    }).join('');
+  }
+  setText('recoRate', curMonthPct + '%');
+  setText('recoMonth', curMonth.month.replace(/\s*\(.*\)/, ''));
+
+  setText('supportStatTotal', fmt(SUPPORT_STATS.total));
+  setText('supportStatWithDevice', fmt(SUPPORT_STATS.withDevice));
+  setText('supportStatWithDeviceSub', `Has the Device field populated — the other ${fmt(SUPPORT_STATS.total - SUPPORT_STATS.withDevice)} have no device tagged.`);
+  setText('supportStatDistinct', fmt(SUPPORT_STATS.distinctDevices));
+}
+
+/* ============================================================
+   One-time DOM wiring — attached once; each handler reads
+   whatever the current data/state is at the moment it fires.
+   ============================================================ */
+document.getElementById('verSelect').addEventListener('change', renderVersionExplorer);
+document.getElementById('verDeviceFilter').addEventListener('change', renderVersionExplorer);
+document.getElementById('verComponentFilter').addEventListener('change', renderVersionExplorer);
+document.getElementById('categoryList').addEventListener('change', recalcEscape);
+document.getElementById('devScopeToggle').addEventListener('click', e=>{
+  if(e.target.tagName!=='BUTTON') return;
+  document.querySelectorAll('#devScopeToggle button').forEach(b=>b.classList.remove('active'));
+  e.target.classList.add('active');
+  const scope = e.target.dataset.scope;
+  document.getElementById('devVersionWrap').style.display = scope==='one' ? 'flex' : 'none';
+  renderDeviceBar(scope, document.getElementById('devVersionSelect').value);
+});
+document.getElementById('devVersionSelect').addEventListener('change', function(){ renderDeviceBar('one', this.value); });
+document.getElementById('compVersionSelect').addEventListener('change', function(){ renderComponentBar(this.value); });
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+renderDashboard();
+
+/* ============================================================
+   Settings page — per-user Jira live refresh (read-only)
+   ------------------------------------------------------------
+   No token is ever written into this file or any file this repo
+   commits. What follows only runs in the visitor's own browser,
+   using credentials that visitor typed into their own settings
+   panel a moment ago (or that were saved, in THIS browser only,
+   from a previous visit). The proxy relays read-only Jira search
+   calls; it forwards the visitor's own Authorization header and
+   never stores it. See the repo README for what the relay is and
+   why a browser can't call Jira directly.
+   ============================================================ */
+(function settingsModule(){
+  const STORAGE_KEY = 'sqd-jira-creds-v1';
+  const overlay = document.getElementById('settingsOverlay');
+  const statusEl = document.getElementById('settingsStatus');
+  const emailEl = document.getElementById('setJiraEmail');
+  const tokenEl = document.getElementById('setJiraToken');
+  const proxyEl = document.getElementById('setProxyUrl');
+  const saveBtn = document.getElementById('settingsSave');
+
+  function loadCreds(){
+    try{ return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null'); }catch(e){ return null; }
+  }
+  function saveCreds(c){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(c)); }catch(e){ /* private mode etc — silently skip persistence */ }
+  }
+  function clearCreds(){
+    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  }
+  function setStatus(kind, msg){
+    statusEl.className = 'modal-status show ' + kind;
+    statusEl.textContent = msg;
+  }
+  function openModal(){
+    const c = loadCreds();
+    if(c){ emailEl.value = c.email || ''; tokenEl.value = c.token || ''; proxyEl.value = c.proxyUrl || ''; }
+    statusEl.className = 'modal-status';
+    overlay.classList.add('open');
+  }
+  function closeModal(){ overlay.classList.remove('open'); }
+
+  document.getElementById('settingsBtn').addEventListener('click', openModal);
+  document.getElementById('settingsClose').addEventListener('click', closeModal);
+  overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
+  document.getElementById('settingsClear').addEventListener('click', ()=>{
+    clearCreds();
+    emailEl.value = ''; tokenEl.value = ''; proxyEl.value = '';
+    IS_LIVE = false;
+    renderDashboard();
+    setStatus('ok', 'Signed out of this browser. Showing the weekly snapshot again.');
+  });
+
+  // ---- Jira REST calls, via the relay, using the visitor's own token ----
+  function authHeader(email, token){ return 'Basic ' + btoa(`${email}:${token}`); }
+
+  async function jiraSearch(proxyUrl, auth, jql, fields, maxResults){
+    maxResults = maxResults || 100;
+    const results = [];
+    let startAt = 0;
+    for(;;){
+      const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
+        method:'POST',
+        headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
+        body: JSON.stringify({ jql, fields: fields||[], maxResults, startAt })
+      });
+      if(!res.ok) throw new Error(`Jira search failed (${res.status}) — ${jql}`);
+      const data = await res.json();
+      results.push(...data.issues);
+      startAt += data.issues.length;
+      if(startAt >= data.total || data.issues.length === 0) break;
+    }
+    return results;
+  }
+  async function jiraCount(proxyUrl, auth, jql){
+    const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
+      method:'POST',
+      headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
+      body: JSON.stringify({ jql, fields:[], maxResults:0 })
+    });
+    if(!res.ok) throw new Error(`Jira count failed (${res.status}) — ${jql}`);
+    const data = await res.json();
+    return data.total;
+  }
+  function fieldOptionValues(field){
+    if(!field) return [];
+    if(Array.isArray(field)) return field.map(f=>f.value);
+    return [field.value];
+  }
+  function compareVersions(a, b){
+    const parse = (v) => {
+      const m = v.match(/^(\d+)\.(\d+)\.(\d+)(?:-([a-zA-Z]+)(\d+)?.*)?$/);
+      if(!m) return { major:0, minor:0, patch:0, pre:v, preNum:0, raw:v };
+      const [, major, minor, patch, pre, preNum] = m;
+      return { major:+major, minor:+minor, patch:+patch, pre:pre||'', preNum:preNum?+preNum:0, raw:v };
+    };
+    const pa = parse(a), pb = parse(b);
+    if(pa.major!==pb.major) return pb.major-pa.major;
+    if(pa.minor!==pb.minor) return pb.minor-pa.minor;
+    if(pa.patch!==pb.patch) return pb.patch-pa.patch;
+    if(!pa.pre && pb.pre) return -1;
+    if(pa.pre && !pb.pre) return 1;
+    if(pa.pre!==pb.pre) return pa.pre.localeCompare(pb.pre)*-1;
+    if(pa.preNum!==pb.preNum) return pb.preNum-pa.preNum;
+    return pb.raw.localeCompare(pa.raw);
+  }
+  const ISSUED_BY_CATEGORIES = ['Support','QA','QA Automation','PO','Development','Integrations'];
+  const F_DEVICE='customfield_10203', F_ISSUED_BY='customfield_11895', F_FW_VERSION='customfield_13320', F_COMPONENT='customfield_13319';
+
+  async function buildIssuedByBreakdown(proxyUrl, auth, projectKey){
+    const total = await jiraCount(proxyUrl, auth, `project = ${projectKey} AND issuetype = Bug`);
+    const breakdown = { Empty: await jiraCount(proxyUrl, auth, `project = ${projectKey} AND issuetype = Bug AND cf[11895] is EMPTY`) };
+    let known = breakdown.Empty;
+    for(const cat of ISSUED_BY_CATEGORIES){
+      const n = await jiraCount(proxyUrl, auth, `project = ${projectKey} AND issuetype = Bug AND cf[11895] = "${cat}"`);
+      if(n > 0){ breakdown[cat] = n; known += n; }
+    }
+    const other = total - known;
+    if(other > 0) breakdown.Other = other;
+    return { total, breakdown };
+  }
+  async function buildFirmwareVersionIssues(proxyUrl, auth){
+    const issues = await jiraSearch(proxyUrl, auth, `project = FW AND issuetype = Bug AND cf[13320] is not EMPTY`,
+      ['summary', F_DEVICE, F_ISSUED_BY, F_FW_VERSION, F_COMPONENT, 'status']);
+    return issues.map(issue=>{
+      const f = issue.fields;
+      return {
+        key: issue.key, summary: f.summary,
+        device: fieldOptionValues(f[F_DEVICE]).join(' / ') || 'Unspecified',
+        component: fieldOptionValues(f[F_COMPONENT]),
+        versions: fieldOptionValues(f[F_FW_VERSION]),
+        issuedBy: f[F_ISSUED_BY] ? f[F_ISSUED_BY].value : 'Unspecified',
+        status: f.status ? f.status.name : 'Unknown',
+      };
+    });
+  }
+  async function buildSupportByDevice(proxyUrl, auth){
+    const issues = await jiraSearch(proxyUrl, auth, `project = FW AND issuetype = Bug AND cf[11895] = "Support"`, [F_DEVICE]);
+    const counts = {};
+    let withDevice = 0;
+    for(const issue of issues){
+      const devices = fieldOptionValues(issue.fields[F_DEVICE]);
+      if(devices.length===0) continue;
+      withDevice++;
+      for(const d of devices) counts[d] = (counts[d]||0)+1;
+    }
+    const list = Object.entries(counts).map(([device,count])=>({device,count})).sort((a,b)=> b.count-a.count || a.device.localeCompare(b.device));
+    return { list, stats: { total: issues.length, withDevice, distinctDevices: list.length } };
+  }
+  function monthRange(monthsAgo){
+    const now = new Date();
+    const y = now.getUTCFullYear(), m = now.getUTCMonth() - monthsAgo;
+    const start = new Date(Date.UTC(y, m, 1)), end = new Date(Date.UTC(y, m+1, 1));
+    const fmt = (d)=>d.toISOString().slice(0,10);
+    const label = start.toLocaleString('en-US', { month:'short', year:'numeric', timeZone:'UTC' });
+    return { start: fmt(start), end: fmt(end), label: monthsAgo===0 ? `${label} (to date)` : label };
+  }
+  async function buildMonthlyTrend(proxyUrl, auth, numMonths){
+    const months = [];
+    for(let i=numMonths-1; i>=0; i--){
+      const { start, end, label } = monthRange(i);
+      const total = await jiraCount(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug AND created >= "${start}" AND created < "${end}"`);
+      const empty = total===0 ? 0 : await jiraCount(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug AND created >= "${start}" AND created < "${end}" AND cf[11895] is EMPTY`);
+      const tagged = total - empty;
+      const support = tagged===0 ? 0 : await jiraCount(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug AND created >= "${start}" AND created < "${end}" AND cf[11895] = "Support"`);
+      const completion = total===0 ? 0 : Math.round((tagged/total)*100);
+      months.push({ month: label, total, tagged, support, completion, lowConfidence: completion < 60 });
+    }
+    return months;
+  }
+
+  async function liveRefresh(email, token, proxyUrl){
+    const auth = authHeader(email, token);
+    const [fw, fe] = await Promise.all([
+      buildIssuedByBreakdown(proxyUrl, auth, 'FW'),
+      buildIssuedByBreakdown(proxyUrl, auth, 'FE'),
+    ]);
+    const issues = await buildFirmwareVersionIssues(proxyUrl, auth);
+    const { list: supportByDevice, stats: supportStats } = await buildSupportByDevice(proxyUrl, auth);
+    const monthly = await buildMonthlyTrend(proxyUrl, auth, 3);
+    const versionSet = new Set();
+    issues.forEach(i => i.versions.forEach(v => versionSet.add(v)));
+    const mainlineOrder = Array.from(versionSet).sort(compareVersions);
+
+    FW_ISSUED = fw.breakdown; FE_ISSUED = fe.breakdown; FW_TOTAL = fw.total; FE_TOTAL = fe.total;
+    ISSUES = issues;
+    SUPPORT_BY_DEVICE = supportByDevice; SUPPORT_STATS = supportStats;
+    MAINLINE_ORDER = mainlineOrder.length ? mainlineOrder : MAINLINE_ORDER;
+    MONTHLY = monthly;
+    FETCHED_AT_ISO = new Date().toISOString();
+    IS_LIVE = true;
+    renderDashboard();
+  }
+
+  saveBtn.addEventListener('click', async ()=>{
+    const email = emailEl.value.trim(), token = tokenEl.value.trim(), proxyUrl = proxyEl.value.trim();
+    if(!email || !token){ setStatus('err', 'Enter your Jira email and API token.'); return; }
+    if(!proxyUrl){ setStatus('err', 'Enter the read-only relay URL — see the note below for what this is and how to get one.'); return; }
+    saveBtn.disabled = true;
+    setStatus('pending', 'Connecting to Jira through your relay…');
+    try{
+      await liveRefresh(email, token, proxyUrl);
+      saveCreds({ email, token, proxyUrl });
+      setStatus('ok', 'Connected — every chart and table above now reflects live Jira data.');
+      setTimeout(closeModal, 1100);
+    }catch(err){
+      console.error(err);
+      setStatus('err', 'Could not refresh from Jira: ' + err.message + '. Check the email/token/relay URL, or see the README for relay setup.');
+    }finally{
+      saveBtn.disabled = false;
+    }
+  });
+
+  // Auto-refresh silently on load if credentials were saved from a previous visit —
+  // this is the "don't make me sign in every time" behavior, scoped to this browser only.
+  const saved = loadCreds();
+  if(saved && saved.email && saved.token && saved.proxyUrl){
+    liveRefresh(saved.email, saved.token, saved.proxyUrl).catch(err=>{
+      console.warn('Silent live refresh failed, staying on weekly snapshot:', err.message);
+    });
+  }
+})();
+</script>
+</body>
+</html>
