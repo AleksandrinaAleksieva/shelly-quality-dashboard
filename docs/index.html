@@ -403,6 +403,37 @@
       </div>
     </div>
   </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Process signals &mdash; reassignment &amp; QA rework</h2>
+        <p>Derived from each bug's Jira changelog, across all FW + FE bugs (not limited to the firmware-version-tagged subset used elsewhere on this page). "Returned from QA to Open" counts a status change directly from <span class="mono">QA</span> to <span class="mono">Open</span> &mdash; the two status names actually used in this Jira workflow (checked against the real transition history, not assumed).</p>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi" style="--accent:var(--violet)">
+        <span class="eyebrow">Assignee changes</span>
+        <div class="val" id="kpiAssigneeChanges">0</div>
+        <div class="sub" id="kpiAssigneeChangesSub">&nbsp;</div>
+      </div>
+      <div class="kpi" style="--accent:var(--violet)">
+        <span class="eyebrow">Bugs reassigned at least once</span>
+        <div class="val" id="kpiBugsReassigned">0</div>
+        <div class="sub" id="kpiBugsReassignedSub">&nbsp;</div>
+      </div>
+      <div class="kpi" style="--accent:var(--red)">
+        <span class="eyebrow">QA &rarr; Open reopen events</span>
+        <div class="val" id="kpiQaReopens">0</div>
+        <div class="sub" id="kpiQaReopensSub">&nbsp;</div>
+      </div>
+      <div class="kpi" style="--accent:var(--red)">
+        <span class="eyebrow">Distinct bugs reopened from QA</span>
+        <div class="val" id="kpiQaReopenIssues">0</div>
+        <div class="sub" id="kpiQaReopenIssuesSub">&nbsp;</div>
+      </div>
+    </div>
+  </section>
 </div>
 
 <!-- ============ DEVICES & COMPONENTS ============ -->
@@ -576,87 +607,101 @@ const COLORS = {support:'#E2604F', qa:'#3FB6A8', po:'#E8A33D', dev:'#5B9EE8', in
    Jira pull and calls renderDashboard() again.
    ============================================================ */
 /* GENDATA:FETCHED_AT:START */
-let FETCHED_AT_ISO = "2026-09-23T18:44:00Z";
+let FETCHED_AT_ISO = "2026-09-29T10:38:00.737Z";
 /* GENDATA:FETCHED_AT:END */
 
 /* ---------- Portfolio-level issued-by totals (all FW / FE bugs) ---------- */
 /* GENDATA:TOTALS:START */
-let FW_ISSUED = {Support:188, QA:36, PO:13, Development:11, Integrations:2, 'QA Automation':15, Other:1, Empty:256};
-let FE_ISSUED = {Support:209, QA:41, PO:2, Other:16, Empty:428};
-let FW_TOTAL = 522, FE_TOTAL = 696;
+let FW_ISSUED = {Support:192, QA:114, PO:83, Development:75, Integrations:2, 'QA Automation':18, Empty:44};
+let FE_ISSUED = {Support:210, QA:45, PO:3, Development:0, Integrations:1, 'QA Automation':0, Empty:428, Other:18};
+let FW_TOTAL = 528, FE_TOTAL = 705;
 /* GENDATA:TOTALS:END */
+
+/* ---------- Changelog-derived process signals (all FW + FE bugs) ---------- */
+/* GENDATA:CHANGELOG_STATS:START */
+let CHANGELOG_STATS = {"scopeTotal": 1233, "assigneeChanges": 0, "issuesWithAssigneeChange": 0, "qaToOpenEvents": 0, "qaToOpenIssues": 0};
+/* GENDATA:CHANGELOG_STATS:END */
 
 /* ---------- Firmware-version-tagged issue-level dataset (28 FW bugs) ---------- */
 /* versions[] can hold >1 entry when an issue was verified across a regression window */
 /* GENDATA:ISSUES:START */
 let ISSUES = [
- {key:'FW-2961', summary:'BLU Button 4 ZB - HA ZHA exposes no button trigger entities', device:'BLU RC Button 4 ZB', component:['Zigbee'], versions:['1.0.1'], issuedBy:'Support', status:'Open'},
- {key:'FW-2962', summary:'BLU TRV intermittently unreachable in Zigbee mode', device:'BLU TRV', component:['Zigbee'], versions:['1.5.0'], issuedBy:'Support', status:'Closed'},
- {key:'FW-2944', summary:'[BLU TRV] Add capacitor charging delay before motor activation', device:'BLU TRV', component:['BluTrv'], versions:['1.5.0'], issuedBy:'PO', status:'Closed'},
- {key:'FW-2959', summary:'[WS90][Zigbee2MQTT] Sensor measurements not reported after pairing', device:'WS90 7-in-1 weather station', component:['Zigbee'], versions:['1.6.0'], issuedBy:'Support', status:'Open'},
- {key:'FW-2948', summary:'[Neo Smart Water Valve] restore_last ignored; valve closes after reboot', device:'Neo smart water valve', component:['Switch'], versions:['1.7.4-xt1-prod0'], issuedBy:'Support', status:'To Do'},
- {key:'FW-3044', summary:'[ShellyX][NEO Water Valve] Range Extender DNS/Cloud/port-forward fail', device:'Neo smart water valve', component:['WiFi'], versions:['1.7.99-xt-prod0'], issuedBy:'Support', status:'Open'},
- {key:'FW-3054', summary:'[H&T Gen3] Periodic sensor report every ~6 min instead of 5', device:'Shelly H&T Gen3', component:['Temperature'], versions:['2.0.0'], issuedBy:'QA', status:'Open'},
- {key:'FW-3051', summary:'[H&T Gen3] Both mutually exclusive temperature webhooks trigger', device:'Shelly H&T Gen3', component:['Webhook'], versions:['2.0.0'], issuedBy:'QA', status:'Open'},
- {key:'FW-2990', summary:'[EM Mini Gen4] Core dump loop after reboot following OTA', device:'EM Mini Gen4', component:['EM'], versions:['2.0.0'], issuedBy:'QA', status:'Closed'},
- {key:'FW-2982', summary:'[Flood S Gen4] Zigbee stops reporting after standby', device:'Flood S Gen4', component:['Zigbee'], versions:['2.0.0'], issuedBy:'Support', status:'In Progress'},
- {key:'FW-3005', summary:'[Schedule] Cron validation fails for valid cron expression', device:'1 Gen3', component:['Schedule'], versions:['2.0.1-beta1'], issuedBy:'Development', status:'Open'},
- {key:'FW-2995', summary:'[Plug S Gen3] Matter Identify cluster missing after fw update', device:'Plug S Gen3', component:['Matter'], versions:['2.0.1-beta1','2.0.0','1.7.5'], issuedBy:'Support', status:'Open'},
- {key:'FW-2992', summary:'[3EM-63W Gen3] Incorrect timestamps via Modbus TCP', device:'Shelly 3EM-63 Gen3', component:['Modbus'], versions:['2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'Open'},
- {key:'FW-2991', summary:'[Pro Dimmer 1PM] Lights flicker/dim incorrectly after fw update', device:'Pro Dimmer 1PM', component:['Shelly'], versions:['2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'Closed'},
- {key:'FW-2984', summary:'[Gen4] Zigbee incoming ZCL/unicast commands fail', device:'Dimmer Gen4', component:['Zigbee'], versions:['2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'In Progress'},
- {key:'FW-3035', summary:'[Pro EM-50][MQTT] Timeout disconnects, delayed reconnects', device:'Pro EM', component:['MQTT'], versions:['2.0.1-beta2'], issuedBy:'Support', status:'To Do'},
- {key:'FW-3023', summary:'[ProSensorAddOn] Output counters enabled but not shown in Web UI', device:'Pro Sensor Add-on', component:['ProSensorAddon'], versions:['2.0.1-beta2'], issuedBy:'QA', status:'Open'},
- {key:'FW-3021', summary:'[EM Gen3] Randomly reboots / core dumps, reset_reason 7', device:'EM Gen3', component:['EM1','MQTT','Script','System (Sys)'], versions:['2.0.1-beta2','2.0.1-beta1','2.0.0','1.7.5'], issuedBy:'Support', status:'To Do'},
- {key:'FW-3016', summary:'Shelly.PutHTTPServerCert returns restart_required:false', device:'Lock General', component:['HTTP'], versions:['2.0.1-beta2','2.0.0'], issuedBy:'QA', status:'Closed'},
- {key:'FW-3008', summary:'[Power Strip Gen4][Zigbee] Apparent power reports active power', device:'Power Strip 4 Gen4', component:['Zigbee'], versions:['2.0.1-beta2','2.0.1-beta1','2.0.0'], issuedBy:'Support', status:'Open'},
- {key:'FW-2986', summary:'LNM: Light.Set with unchanged brightness still sends TX', device:'Bulb RGB Gen3 / Dimmer Gen4', component:['CCT','Light','RGBCCT','RGBW','LNM'], versions:['2.0.1-beta2'], issuedBy:'QA', status:'Closed'},
- {key:'FW-2983', summary:'S1G4ZB core dump after power cycle', device:'1 Gen4', component:['Zigbee'], versions:['2.0.1-beta2'], issuedBy:'QA Automation', status:'Open'},
- {key:'FW-3048', summary:'Plug US Gen4 - Metering freezes and device reboots', device:'Plug US Gen4', component:['PM1'], versions:['2.0.1-beta3','2.0.1-beta2','2.0.0'], issuedBy:'Support', status:'To Do'},
- {key:'FW-3047', summary:'[2.0.1-beta3] Pro3EM CSV export fails for longer periods', device:'Pro 3EM', component:['EMData'], versions:['2.0.1-beta3'], issuedBy:'Support', status:'To Do'},
- {key:'FW-3046', summary:'Coredump after BTHome.AddDevice without active scan', device:'1 Gen4', component:['Bluetooth Low Energy (BLE)'], versions:['2.0.1-beta3'], issuedBy:'QA Automation', status:'Open'},
- {key:'FW-3042', summary:'[Shelly IR Controller] Incorrect IR code repeat handling', device:'Shelly IR Controller Gen4', component:['IRCode'], versions:['2.0.1-beta3'], issuedBy:'QA', status:'Closed'},
- {key:'FW-2960', summary:'[Shelly Camera] Auth causes local Web UI/API failures + RTSP 5XX', device:'Shelly Camera', component:['Camera'], versions:['2.1.99-cameraprod7'], issuedBy:'Support', status:'Closed'},
- {key:'FW-2957', summary:'[Camera] Unable to open third RTSP stream', device:'Shelly Camera', component:['Camera'], versions:['2.1.99-cameraprod8'], issuedBy:'QA', status:'Open'},
+ {key:"FW-3109", summary:"Shelly 2 Gen4 unexpected restart", device:"Shelly 2 Gen4", component:["Switch"], versions:["2.1.99"], issuedBy:"Shelly X", status:"Open"},
+ {key:"FW-3108", summary:"[Shelly Camera] IR Cut Filter Mechanism Failure in Low-Light Condition", device:"Shelly Camera", component:["Camera"], versions:["1.0.0"], issuedBy:"Support", status:"Open"},
+ {key:"FW-3103", summary:"Shelly Plug US Gen4 randomly powers off + core dumps", device:"Plug US Gen4", component:["DevicePower"], versions:["2.0.1-beta3"], issuedBy:"Support", status:"Open"},
+ {key:"FW-3098", summary:"[BLU Gateway Gen3] Instability, firmware update failures and intermittent \u201cconnect failed\u201d messages with FW >=2.0.0", device:"BLU Gateway Gen3 / BLU TRV", component:["BluTrv"], versions:["2.0.1-beta3"], issuedBy:"QA", status:"To Do"},
+ {key:"FW-3097", summary:"[BLU TRV][BLU Gateway Gen3] Gateway UI remains in Celsius when Fahrenheit is selected", device:"BLU Gateway Gen3 / BLU TRV", component:["BTHome"], versions:["2.0.1-beta3"], issuedBy:"QA", status:"Open"},
+ {key:"FW-3079", summary:"Pro 3EM \u2013 Historical Data Export Fails Across Multiple Devices After Data Reset", device:"Pro 3EM", component:["EMData"], versions:["2.0.1-beta3", "2.0.0"], issuedBy:"Support", status:"To Do"},
+ {key:"FW-3060", summary:"[BLU TRV] Factory reset leaves algorithm=0; default should be 1", device:"BLU TRV", component:["BluTrv"], versions:["BLU 1.5.0"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-3059", summary:"[BLU TRV] Old MClimate motor: excessive clamping and sporadic calibration during closing (hw_id=0)", device:"BLU TRV", component:["BluTrv"], versions:["BLU 1.5.0"], issuedBy:"QA", status:"Open"},
+ {key:"FW-3058", summary:"[2PM Gen3][Cover] False fully-open detection from fully closed position", device:"2PM Gen3", component:["MQTT"], versions:["2.0.1-beta2", "2.0.0"], issuedBy:"Support", status:"Open"},
+ {key:"FW-3054", summary:"[H&T Gen3] Periodic sensor report is sent approximately every 6 minutes instead of 5 minutes", device:"Shelly H&T Gen3", component:["Temperature"], versions:["2.0.0"], issuedBy:"QA", status:"Open"},
+ {key:"FW-3051", summary:"[H&T Gen3] Both mutually exclusive temperature webhook actions are triggered depending on temperature change direction", device:"Shelly H&T Gen3", component:["Webhook"], versions:["2.0.0"], issuedBy:"QA", status:"Open"},
+ {key:"FW-3048", summary:"Shelly Plug US Gen4 \u2013 Metering Freezes and Device Reboots", device:"Plug US Gen4", component:["PM1"], versions:["2.0.1-beta3", "2.0.1-beta2", "2.0.0"], issuedBy:"Support", status:"To Do"},
+ {key:"FW-3047", summary:"[2.0.1-beta3] Pro3EM CSV export fails for longer periods", device:"Pro 3EM", component:["EMData"], versions:["2.0.1-beta3"], issuedBy:"Support", status:"To Do"},
+ {key:"FW-3046", summary:"Coredump after BTHome.AddDevice without active scan", device:"1 Gen4", component:["Bluetooth Low Energy (BLE)"], versions:["2.0.1-beta3"], issuedBy:"QA Automation", status:"Open"},
+ {key:"FW-3044", summary:"[ShellyX][NEO Smart Water Valve] Range Extender - DNS, Cloud connectivity and mport forwarding fail", device:"Neo smart water valve", component:["WiFi"], versions:["1.7.99-xt-prod0"], issuedBy:"Support", status:"Open"},
+ {key:"FW-3042", summary:"[Shelly IR Controller] \u2013 Incorrect IR Code Repeat Handling", device:"Shelly IR Controller Gen4", component:["IRCode"], versions:["2.0.1-beta3"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-3035", summary:"[Pro EM-50] [MQTT] Timeout disconnects and delayed reconnects without device reboot", device:"Pro EM", component:["MQTT"], versions:["2.0.1-beta2"], issuedBy:"Support", status:"To Do"},
+ {key:"FW-3023", summary:"[ProSensorAddOn] Output counters enabled in config (counts.enable: true) but not shown in web UI", device:"Pro Sensor Add-on", component:["ProSensorAddon"], versions:["2.0.1-beta2"], issuedBy:"QA", status:"Open"},
+ {key:"FW-3021", summary:"[EM Gen3] randomly reboots / core dumps with reset_reason 7 across multiple firmware versions", device:"EM Gen3", component:["EM1", "EM1Data", "MQTT", "Script", "System (Sys)"], versions:["2.0.1-beta2", "2.0.1-beta1", "2.0.0", "1.7.5"], issuedBy:"Support", status:"To Do"},
+ {key:"FW-3016", summary:"Shelly.PutHTTPServerCert returns restart_required: false after uploading a valid certificate", device:"Lock General", component:["HTTP"], versions:["2.0.1-beta2", "2.0.0"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-3008", summary:"[Power Strip Gen4][Zigbee] Apparent power reports active power value instead of VA", device:"Power Strip 4 Gen4", component:["Zigbee"], versions:["2.0.1-beta2", "2.0.1-beta1", "2.0.0"], issuedBy:"Support", status:"Open"},
+ {key:"FW-3005", summary:"[Schedule] Cron validation fails for valid cron expression", device:"1 Gen3", component:["Schedule"], versions:["2.0.1-beta1"], issuedBy:"Development", status:"Open"},
+ {key:"FW-2995", summary:"[Plug S Gen3] \u2013 Matter Identify cluster missing after firmware update", device:"Plug S Gen3", component:["Matter"], versions:["2.0.1-beta1", "2.0.0", "1.7.5"], issuedBy:"Support", status:"Open"},
+ {key:"FW-2992", summary:"[3EM-63W Gen3] Incorrect Timestamps Returned via Modbus TCP", device:"Shelly 3EM-63 Gen3", component:["Modbus"], versions:["2.0.1-beta1", "2.0.0"], issuedBy:"Support", status:"Open"},
+ {key:"FW-2991", summary:"[Pro Dimmer 1PM] Lights Flicker and Dim Incorrectly After Firmware Update", device:"Pro Dimmer 1PM", component:["Shelly"], versions:["2.0.1-beta1", "2.0.0"], issuedBy:"Support", status:"Closed"},
+ {key:"FW-2990", summary:"[EM Mini Gen4] Core dump loop after reboot following OTA from 2.0.0 to latest main", device:"EM Mini Gen4", component:["EM"], versions:["2.0.0"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2986", summary:"LNM: Light.Set with unchanged brightness still sends TX (unlike CCT/RGBW/RGBCCT)", device:"Bulb RGB Gen3 / Dimmer Gen4", component:["CCT", "Light", "RGBCCT", "RGBW", "LNM"], versions:["2.0.1-beta2"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2984", summary:"[BUG] Gen4 Zigbee incoming ZCL/unicast commands fail while device reporting continues.", device:"Dimmer Gen4", component:["Zigbee"], versions:["2.0.1-beta1", "2.0.0"], issuedBy:"Support", status:"In Progress"},
+ {key:"FW-2983", summary:"S1G4ZB core dump after power cycle", device:"1 Gen4", component:["Zigbee"], versions:["2.0.1-beta2"], issuedBy:"QA Automation", status:"Open"},
+ {key:"FW-2982", summary:"[Flood S Gen4] Zigbee stops reporting after standby / wet\u2192dry transition not sent", device:"Flood S Gen4", component:["Zigbee"], versions:["2.0.0"], issuedBy:"Support", status:"In Progress"},
+ {key:"FW-2962", summary:"BLU TRV becomes intermittently unreachable in Zigbee mode and fails target-temperature commands", device:"BLU TRV", component:["Zigbee"], versions:["1.5.0"], issuedBy:"Support", status:"Closed"},
+ {key:"FW-2961", summary:"BLU Button 4 ZB - Home Assistant ZHA exposes no button trigger entities", device:"BLU RC Button 4 ZB", component:["Zigbee"], versions:["1.0.1"], issuedBy:"Support", status:"Open"},
+ {key:"FW-2960", summary:"[Shelly Camera] Enabling authentication causes local Web UI/API failures and authenticated RTSP 5XX", device:"Shelly Camera", component:["Camera"], versions:["2.1.99-cameraprod7"], issuedBy:"Support", status:"Closed"},
+ {key:"FW-2959", summary:"[WS90] [Zigbee2MQTT] Sensor measurements not reported after pairing; bindings/configured reporting remain empty", device:"WS90 7-in-1 weather station", component:["Zigbee"], versions:["1.6.0"], issuedBy:"Support", status:"Open"},
+ {key:"FW-2957", summary:"[Camera] Unable to open third RTSP stream", device:"Shelly Camera", component:["Camera"], versions:["2.1.99-cameraprod8"], issuedBy:"QA", status:"Open"},
+ {key:"FW-2948", summary:"[Neo Smart Water Valve] Power On Default mode: restore_last ignored; valve closes after reboot/power restore.", device:"Neo smart water valve", component:["Switch"], versions:["1.7.4-xt1-prod0"], issuedBy:"Support", status:"To Do"},
+ {key:"FW-2944", summary:"[BLU TRV] Add capacitor charging delay before motor activation", device:"BLU TRV", component:["BluTrv"], versions:["1.5.0"], issuedBy:"PO", status:"Closed"},
+ {key:"FW-2632", summary:"S1G4 cannot transmit nor receive messages over LNM", device:"1 Gen4", component:["LNM"], versions:["2.0.0"], issuedBy:"QA Automation", status:"Closed"},
+ {key:"FW-2551", summary:"[DimmerG3] Fails to update to 2.0.0 stable", device:"Dimmer Gen3", component:[], versions:["2.0.0"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2534", summary:"[Cury] Lowest LED remains off instead of blinking when the vial is Empty in \"mode\": \"intensity\"", device:"Cury", component:["Cury"], versions:["2.0.1-beta3"], issuedBy:"QA", status:"To Do"},
+ {key:"FW-2362", summary:"[Zigbee] Unexpected \"Opening\" sensor appears in Home Assistant for some devices", device:"Unspecified", component:["Zigbee"], versions:["2.0.0-beta3"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2361", summary:"[Web] UI Flicker During Back Navigation in Settings", device:"Unspecified", component:[], versions:["2.0.0-beta3"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2316", summary:"[DaisyEM] Tariff table Holidays accepts duplicating dates", device:"Daisy EM", component:[], versions:["2.1.99-i4g4prod0"], issuedBy:"QA", status:"QA"},
+ {key:"FW-2122", summary:"Factory reset doesn't work before ota.commit", device:"Unspecified", component:[], versions:["2.0.0-beta2"], issuedBy:"QA", status:"Open"},
+ {key:"FW-2093", summary:"[ProSensorAddon][WEB] Sensor card is not visible upon initial adding of sensor", device:"Pro Sensor Add-on", component:[], versions:["2.0.0-beta2"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2084", summary:"[ProSensorAddon] Fix Operational counters for Switch(100)", device:"Unspecified", component:["ProSensorAddon"], versions:["2.0.0-beta2"], issuedBy:"QA", status:"Open"},
+ {key:"FW-2081", summary:"[Cury] Inserting a vial while `orientation_tilt` error is active triggers heating", device:"Cury", component:["Cury"], versions:["2.0.0-beta1cury0"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2076", summary:"[Pro Sensor Addon] Switch(100) Action on power ON doesn't work", device:"Unspecified", component:["ProSensorAddon"], versions:["2.0.0-beta2"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2075", summary:"Firmware name sometimes temporarily appears as undefined", device:"Unspecified", component:["ProSensorAddon"], versions:["2.0.0-beta2"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-2073", summary:"[WEB][ProSensorAddon] Add-on Switch(100) component presents irrelevant settings in WEB", device:"Unspecified", component:[], versions:["2.0.0-beta2"], issuedBy:"QA", status:"Closed"},
+ {key:"FW-1967", summary:"[Smoke] OTA is interrupted when device falls asleep", device:"Plus Smoke / Smoke Gen4", component:[], versions:["2.0.0-beta1"], issuedBy:"QA", status:"Open"},
+ {key:"FW-1922", summary:"Webhook HTTPS fails when receiver uses valid self-signed certificate", device:"Unspecified", component:["System (Sys)"], versions:["1.7.5"], issuedBy:"QA", status:"Closed"},
 ];
 /* GENDATA:ISSUES:END */
 
 /* ---------- Support-reported HW defects, per device, all-time / all versions (188 FW bugs, not scoped to version-tagged subset) ---------- */
 /* GENDATA:SUPPORT_BY_DEVICE:START */
-let SUPPORT_BY_DEVICE = [
-  {device:"Plug US Gen4", count:8}, {device:"2PM Gen4", count:8}, {device:"Presence Gen4", count:8},
-  {device:"BLU TRV", count:7}, {device:"Pro 3EM", count:6}, {device:"Dimmer Gen4", count:6},
-  {device:"Plug S Gen3", count:4}, {device:"1PM Gen4", count:4}, {device:"Flood Gen4", count:4},
-  {device:"BLU Gateway Gen3", count:4}, {device:"Neo smart water valve", count:3}, {device:"Pro EM", count:3},
-  {device:"Power Strip 4 Gen4", count:3}, {device:"2PM Gen3", count:3}, {device:"Pro Dimmer 2PM", count:3},
-  {device:"Pro 4PM V3", count:3}, {device:"BLU H&T Display", count:3}, {device:"EM Gen3", count:2},
-  {device:"WS90 7-in-1 weather station", count:2}, {device:"Plug PM Gen3", count:2}, {device:"Shelly H&T Gen3", count:2},
-  {device:"1 Gen4", count:2}, {device:"SPVR Powered by Shelly", count:2}, {device:"Dimmer Gen3", count:2},
-  {device:"BLU Remote Control", count:2}, {device:"DALI Dimmer Gen3", count:2}, {device:"Shelly 3EM-63 Gen3", count:1},
-  {device:"Pro Dimmer 1PM", count:1}, {device:"Flood S Gen4", count:1}, {device:"BLU RC Button 4 ZB", count:1},
-  {device:"Shelly Camera", count:1}, {device:"1PM Gen3", count:1}, {device:"Pro CB", count:1},
-  {device:"Wall Dimmer", count:1}, {device:"EM Mini Gen4", count:1}, {device:"Pro RGBWW PM", count:1},
-  {device:"Ogemray 25A Relay", count:1}, {device:"Plus Uni", count:1}, {device:"PM Mini Gen3", count:1},
-  {device:"1 Gen3", count:1}, {device:"Plus Smoke", count:1}, {device:"Pro 1", count:1},
-  {device:"Pro Sensor Add-on", count:1}, {device:"BLU Door/Window ZB", count:1}, {device:"Bulb Duo Gen3", count:1},
-  {device:"BLU Wall Switch 4 ZB", count:1}, {device:"Plug M Gen3", count:1},
-]; // sums to 119 tag-occurrences across 114 device-tagged issues (a few bugs affect 2 devices); 74 of 188 Support bugs have no device set
+let SUPPORT_BY_DEVICE = [{"device": "BLU TRV", "count": 9}, {"device": "Plug US Gen4", "count": 9}, {"device": "2PM Gen4", "count": 8}, {"device": "Presence Gen4", "count": 8}, {"device": "Pro 3EM", "count": 7}, {"device": "Dimmer Gen4", "count": 6}, {"device": "BLU Gateway Gen3", "count": 5}, {"device": "1PM Gen4", "count": 4}, {"device": "2PM Gen3", "count": 4}, {"device": "Flood Gen4", "count": 4}, {"device": "Plug S Gen3", "count": 4}, {"device": "BLU H&T Display", "count": 3}, {"device": "Neo smart water valve", "count": 3}, {"device": "Power Strip 4 Gen4", "count": 3}, {"device": "Pro 4PM V3", "count": 3}, {"device": "Pro Dimmer 2PM", "count": 3}, {"device": "Pro EM", "count": 3}, {"device": "1 Gen4", "count": 2}, {"device": "BLU Remote Control", "count": 2}, {"device": "DALI Dimmer Gen3", "count": 2}, {"device": "Dimmer Gen3", "count": 2}, {"device": "EM Gen3", "count": 2}, {"device": "Plug PM Gen3", "count": 2}, {"device": "SPVR Powered by Shelly", "count": 2}, {"device": "Shelly Camera", "count": 2}, {"device": "Shelly H&T Gen3", "count": 2}, {"device": "WS90 7-in-1 weather station", "count": 2}, {"device": "1 Gen3", "count": 1}, {"device": "1PM Gen3", "count": 1}, {"device": "BLU Door/Window ZB", "count": 1}, {"device": "BLU RC Button 4 ZB", "count": 1}, {"device": "BLU Wall Switch 4 ZB", "count": 1}, {"device": "Bulb Duo Gen3", "count": 1}, {"device": "EM Mini Gen4", "count": 1}, {"device": "Flood S Gen4", "count": 1}, {"device": "Ogemray 25A Relay", "count": 1}, {"device": "PM Mini Gen3", "count": 1}, {"device": "Plug M Gen3", "count": 1}, {"device": "Plus Smoke", "count": 1}, {"device": "Plus Uni", "count": 1}, {"device": "Pro 1", "count": 1}, {"device": "Pro CB", "count": 1}, {"device": "Pro Dimmer 1PM", "count": 1}, {"device": "Pro RGBWW PM", "count": 1}, {"device": "Pro Sensor Add-on", "count": 1}, {"device": "Shelly 3EM-63 Gen3", "count": 1}, {"device": "Wall Dimmer", "count": 1}];
+
 /* GENDATA:SUPPORT_BY_DEVICE:END */
 /* GENDATA:SUPPORT_STATS:START */
-let SUPPORT_STATS = { total: 188, withDevice: 114, distinctDevices: 47 };
+let SUPPORT_STATS = {"total": 192, "withDevice": 118, "distinctDevices": 47};
+
 /* GENDATA:SUPPORT_STATS:END */
 
 /* mainline version order, newest first (matches Firmware Version field's own option order) */
 /* GENDATA:VERSIONS:START */
-let MAINLINE_ORDER = ['2.0.1-beta3','2.0.1-beta2','2.0.1-beta1','2.0.0','1.7.99-xt-prod0','1.7.5','1.7.4-xt1-prod0','1.6.0','1.5.0','1.0.1'];
+let MAINLINE_ORDER = ["2.1.99", "2.1.99-cameraprod8", "2.1.99-cameraprod7", "2.1.99-i4g4prod0", "2.0.1-beta3", "2.0.1-beta2", "2.0.1-beta1", "2.0.0", "2.0.0-beta3", "2.0.0-beta2", "2.0.0-beta1cury0", "2.0.0-beta1", "1.7.99-xt-prod0", "1.7.5", "1.7.4-xt1-prod0", "1.6.0", "1.5.0", "1.0.1", "1.0.0", "BLU 1.5.0"];
 /* GENDATA:VERSIONS:END */
 
 /* ---------- Monthly trend (data-quality-aware) ---------- */
 /* GENDATA:MONTHLY:START */
 let MONTHLY = [
-  {month:'Jul 2026', total:158, tagged:57, support:52, completion:36, lowConfidence:true},
-  {month:'Aug 2026', total:173, tagged:141, support:66, completion:82, lowConfidence:false},
-  {month:'Sep 2026 (to date)', total:83, tagged:83, support:35, completion:100, lowConfidence:false},
+  {month:'Jul 2026', total:158, tagged:80, support:52, completion:51, lowConfidence:true},
+  {month:'Aug 2026', total:173, tagged:150, support:66, completion:87, lowConfidence:false},
+  {month:'Sep 2026 (to date)', total:101, tagged:101, support:40, completion:100, lowConfidence:false},
 ];
 /* GENDATA:MONTHLY:END */
 
@@ -1041,6 +1086,15 @@ function hydrateStaticText(){
   setText('supportStatWithDevice', fmt(SUPPORT_STATS.withDevice));
   setText('supportStatWithDeviceSub', `Has the Device field populated — the other ${fmt(SUPPORT_STATS.total - SUPPORT_STATS.withDevice)} have no device tagged.`);
   setText('supportStatDistinct', fmt(SUPPORT_STATS.distinctDevices));
+
+  setText('kpiAssigneeChanges', fmt(CHANGELOG_STATS.assigneeChanges));
+  setText('kpiAssigneeChangesSub', `Across ${fmt(CHANGELOG_STATS.scopeTotal)} FW + FE bugs scanned.`);
+  setText('kpiBugsReassigned', fmt(CHANGELOG_STATS.issuesWithAssigneeChange));
+  setText('kpiBugsReassignedSub', `${CHANGELOG_STATS.scopeTotal ? Math.round(CHANGELOG_STATS.issuesWithAssigneeChange/CHANGELOG_STATS.scopeTotal*1000)/10 : 0}% of bugs scanned had the Assignee changed at least once.`);
+  setText('kpiQaReopens', fmt(CHANGELOG_STATS.qaToOpenEvents));
+  setText('kpiQaReopensSub', 'Status changed directly from QA back to Open (counts every occurrence, including bugs bounced more than once).');
+  setText('kpiQaReopenIssues', fmt(CHANGELOG_STATS.qaToOpenIssues));
+  setText('kpiQaReopenIssuesSub', `${CHANGELOG_STATS.scopeTotal ? Math.round(CHANGELOG_STATS.qaToOpenIssues/CHANGELOG_STATS.scopeTotal*1000)/10 : 0}% of bugs scanned were sent back from QA at least once.`);
 }
 
 /* ============================================================
@@ -1145,6 +1199,49 @@ renderDashboard();
       if(startAt >= data.total || data.issues.length === 0) break;
     }
     return results;
+  }
+  // Same contract as jiraSearch, but asks Jira to inline each issue's
+  // changelog (expand=changelog) — this is still just POST /rest/api/3/search,
+  // so it works through the same read-only relay with no changes there.
+  async function jiraSearchWithChangelog(proxyUrl, auth, jql, maxResults){
+    maxResults = maxResults || 100;
+    const results = [];
+    let startAt = 0;
+    for(;;){
+      const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
+        method:'POST',
+        headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
+        body: JSON.stringify({ jql, fields: [], maxResults, startAt, expand: ['changelog'] })
+      });
+      if(!res.ok) throw new Error(`Jira search (changelog) failed (${res.status}) — ${jql}`);
+      const data = await res.json();
+      results.push(...data.issues);
+      startAt += data.issues.length;
+      if(startAt >= data.total || data.issues.length === 0) break;
+    }
+    return results;
+  }
+  function computeChangelogStats(issues){
+    let assigneeChanges = 0, issuesWithAssigneeChange = 0, qaToOpenEvents = 0;
+    const qaToOpenIssues = new Set();
+    for(const issue of issues){
+      const histories = (issue.changelog && issue.changelog.histories) || [];
+      let hadAssigneeChange = false;
+      for(const h of histories){
+        for(const item of h.items || []){
+          if(item.field === 'assignee'){ assigneeChanges++; hadAssigneeChange = true; }
+          if(item.field === 'status' && item.fromString === 'QA' && item.toString === 'Open'){
+            qaToOpenEvents++; qaToOpenIssues.add(issue.key);
+          }
+        }
+      }
+      if(hadAssigneeChange) issuesWithAssigneeChange++;
+    }
+    return { scopeTotal: issues.length, assigneeChanges, issuesWithAssigneeChange, qaToOpenEvents, qaToOpenIssues: qaToOpenIssues.size };
+  }
+  async function buildChangelogStats(proxyUrl, auth){
+    const issues = await jiraSearchWithChangelog(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug`);
+    return computeChangelogStats(issues);
   }
   async function jiraCount(proxyUrl, auth, jql){
     const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
@@ -1252,6 +1349,7 @@ renderDashboard();
     const issues = await buildFirmwareVersionIssues(proxyUrl, auth);
     const { list: supportByDevice, stats: supportStats } = await buildSupportByDevice(proxyUrl, auth);
     const monthly = await buildMonthlyTrend(proxyUrl, auth, 3);
+    const changelogStats = await buildChangelogStats(proxyUrl, auth);
     const versionSet = new Set();
     issues.forEach(i => i.versions.forEach(v => versionSet.add(v)));
     const mainlineOrder = Array.from(versionSet).sort(compareVersions);
@@ -1261,6 +1359,7 @@ renderDashboard();
     SUPPORT_BY_DEVICE = supportByDevice; SUPPORT_STATS = supportStats;
     MAINLINE_ORDER = mainlineOrder.length ? mainlineOrder : MAINLINE_ORDER;
     MONTHLY = monthly;
+    CHANGELOG_STATS = changelogStats;
     FETCHED_AT_ISO = new Date().toISOString();
     IS_LIVE = true;
     renderDashboard();
@@ -1271,7 +1370,7 @@ renderDashboard();
     if(!email || !token){ setStatus('err', 'Enter your Jira email and API token.'); return; }
     if(!proxyUrl){ setStatus('err', 'Enter the read-only relay URL — see the note below for what this is and how to get one.'); return; }
     saveBtn.disabled = true;
-    setStatus('pending', 'Connecting to Jira through your relay…');
+    setStatus('pending', 'Connecting to Jira through your relay… pulling changelogs for ~1,200 bugs can take a little longer than the rest.');
     try{
       await liveRefresh(email, token, proxyUrl);
       saveCreds({ email, token, proxyUrl });
