@@ -1180,77 +1180,106 @@ renderDashboard();
   });
 
   // ---- Jira REST calls, via the relay, using the visitor's own token ----
+  // Atlassian retired the classic POST /rest/api/3/search endpoint (it now
+  // returns 410 Gone) in favor of POST /rest/api/3/search/jql, which uses a
+  // nextPageToken cursor instead of startAt/total, and no longer returns a
+  // total count — see jiraCount below for how counts work now.
   function authHeader(email, token){ return 'Basic ' + btoa(`${email}:${token}`); }
 
   async function jiraSearch(proxyUrl, auth, jql, fields, maxResults){
     maxResults = maxResults || 100;
     const results = [];
-    let startAt = 0;
+    let nextPageToken;
     for(;;){
-      const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
+      const body = { jql, fields: fields||[], maxResults };
+      if(nextPageToken) body.nextPageToken = nextPageToken;
+      const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search/jql', {
         method:'POST',
         headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
-        body: JSON.stringify({ jql, fields: fields||[], maxResults, startAt })
+        body: JSON.stringify(body)
       });
       if(!res.ok) throw new Error(`Jira search failed (${res.status}) — ${jql}`);
       const data = await res.json();
-      results.push(...data.issues);
-      startAt += data.issues.length;
-      if(startAt >= data.total || data.issues.length === 0) break;
+      results.push(...(data.issues||[]));
+      nextPageToken = data.nextPageToken;
+      if(!nextPageToken || !data.issues || data.issues.length === 0) break;
     }
     return results;
   }
-  // Same contract as jiraSearch, but asks Jira to inline each issue's
-  // changelog (expand=changelog) — this is still just POST /rest/api/3/search,
-  // so it works through the same read-only relay with no changes there.
-  async function jiraSearchWithChangelog(proxyUrl, auth, jql, maxResults){
-    maxResults = maxResults || 100;
-    const results = [];
-    let startAt = 0;
-    for(;;){
-      const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
-        method:'POST',
-        headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
-        body: JSON.stringify({ jql, fields: [], maxResults, startAt, expand: ['changelog'] })
-      });
-      if(!res.ok) throw new Error(`Jira search (changelog) failed (${res.status}) — ${jql}`);
-      const data = await res.json();
-      results.push(...data.issues);
-      startAt += data.issues.length;
-      if(startAt >= data.total || data.issues.length === 0) break;
+  // Bulk-fetches full changelogs for a list of issue keys via
+  // POST /rest/api/3/changelog/bulkfetch (replaces expand=changelog on the
+  // old search endpoint, which only ever returned each issue's 10 most
+  // recent changelog entries — an undercount risk, and moot now that the
+  // endpoint it relied on is gone).
+  // NOTE: this response shape (issueChangeLogs[].changeHistories[] with
+  // field/from/to) is based on Atlassian community reports, not a call
+  // verified against this Jira site directly — the fallbacks below
+  // (fieldId, fromString/toString) are defensive for that reason. Worth a
+  // sanity check on the first real refresh against a bug you know had an
+  // assignee change or a QA→Open bounce.
+  async function jiraChangelogBulkFetch(proxyUrl, auth, issueKeys, batchSize){
+    batchSize = batchSize || 200;
+    const all = [];
+    for(let i=0; i<issueKeys.length; i+=batchSize){
+      const batch = issueKeys.slice(i, i+batchSize);
+      let nextPageToken;
+      for(;;){
+        const body = { issueIdsOrKeys: batch, maxResults: 100 };
+        if(nextPageToken) body.nextPageToken = nextPageToken;
+        const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/changelog/bulkfetch', {
+          method:'POST',
+          headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
+          body: JSON.stringify(body)
+        });
+        if(!res.ok) throw new Error(`Jira changelog bulkfetch failed (${res.status})`);
+        const data = await res.json();
+        all.push(...(data.issueChangeLogs || data.values || []));
+        nextPageToken = data.nextPageToken;
+        if(!nextPageToken) break;
+      }
     }
-    return results;
+    return all;
   }
-  function computeChangelogStats(issues){
+  function computeChangelogStats(issueChangeLogs, scopeTotal){
     let assigneeChanges = 0, issuesWithAssigneeChange = 0, qaToOpenEvents = 0;
     const qaToOpenIssues = new Set();
-    for(const issue of issues){
-      const histories = (issue.changelog && issue.changelog.histories) || [];
+    for(const entry of issueChangeLogs){
+      const id = entry.issueId || entry.id;
+      const histories = entry.changeHistories || entry.histories || [];
       let hadAssigneeChange = false;
-      for(const h of histories){
-        for(const item of h.items || []){
-          if(item.field === 'assignee'){ assigneeChanges++; hadAssigneeChange = true; }
-          if(item.field === 'status' && item.fromString === 'QA' && item.toString === 'Open'){
-            qaToOpenEvents++; qaToOpenIssues.add(issue.key);
-          }
+      for(const item of histories){
+        const field = item.field || item.fieldId;
+        const fromVal = item.fromString !== undefined ? item.fromString : item.from;
+        const toVal = item.toString !== undefined ? item.toString : item.to;
+        if(field === 'assignee'){ assigneeChanges++; hadAssigneeChange = true; }
+        if(field === 'status' && fromVal === 'QA' && toVal === 'Open'){
+          qaToOpenEvents++; qaToOpenIssues.add(id);
         }
       }
       if(hadAssigneeChange) issuesWithAssigneeChange++;
     }
-    return { scopeTotal: issues.length, assigneeChanges, issuesWithAssigneeChange, qaToOpenEvents, qaToOpenIssues: qaToOpenIssues.size };
+    return { scopeTotal, assigneeChanges, issuesWithAssigneeChange, qaToOpenEvents, qaToOpenIssues: qaToOpenIssues.size };
   }
   async function buildChangelogStats(proxyUrl, auth){
-    const issues = await jiraSearchWithChangelog(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug`);
-    return computeChangelogStats(issues);
+    const keyIssues = await jiraSearch(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug`, []);
+    const issueKeys = keyIssues.map(i=>i.key);
+    const changelogs = await jiraChangelogBulkFetch(proxyUrl, auth, issueKeys);
+    return computeChangelogStats(changelogs, issueKeys.length);
   }
+  // The new search endpoint dropped "total" entirely, so counts now come
+  // from the dedicated POST /rest/api/3/search/approximate-count endpoint.
+  // Response field name isn't independently confirmed against this site
+  // either — reads data.count, falling back to data.approximateCount.
   async function jiraCount(proxyUrl, auth, jql){
-    const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search', {
+    const res = await fetch(proxyUrl.replace(/\/$/,'') + '/rest/api/3/search/approximate-count', {
       method:'POST',
       headers:{ 'Authorization':auth, 'Content-Type':'application/json', 'Accept':'application/json' },
-      body: JSON.stringify({ jql, fields:[], maxResults:0 })
+      body: JSON.stringify({ jql })
     });
     if(!res.ok) throw new Error(`Jira count failed (${res.status}) — ${jql}`);
     const data = await res.json();
+    if(typeof data.count === 'number') return data.count;
+    if(typeof data.approximateCount === 'number') return data.approximateCount;
     return data.total;
   }
   function fieldOptionValues(field){
