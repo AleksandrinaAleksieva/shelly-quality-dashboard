@@ -188,7 +188,7 @@
       <div class="banner-left">
         <span class="eyebrow">Latest tracked firmware version</span>
         <div class="ver" id="bannerLatestVer">2.0.1-beta3 <span class="badge beta">pre-release</span></div>
-        <div class="desc">Newest option added to the Firmware Version field. Pulled dynamically &mdash; this label updates the moment a newer version is logged against a bug.</div>
+        <div class="desc">Newest option on the Firmware Version field, excluding build-99 branches (e.g. 2.1.99, 2.1.99-cameraprod8) &mdash; those are internal/dev or separate-product-line builds, not a tracked release, per this team's own versioning convention. There's no field that marks beta vs. stable, so this is usually the newest beta among the real release-train versions.</div>
       </div>
       <div class="banner-stats">
         <div class="bstat"><div class="n" id="latestCount">4</div><div class="l">Bugs on <span id="latestVerLabel">2.0.1-beta3</span></div></div>
@@ -212,9 +212,10 @@
         <div class="sub" id="kpiTotalBugsSub">FW 522 &middot; FE 696 &mdash; every issue with issuetype = Bug, all statuses.</div>
       </div>
       <div class="kpi" style="--accent:var(--red)">
-        <span class="eyebrow">Defect escape rate &mdash; this month</span>
-        <div class="val" id="kpiEscapeRate">42.2<span class="unit">%</span></div>
-        <div class="sub" id="kpiEscapeRateSub">35 of 83 bugs logged since Sep 1 have <b style="color:var(--text)">Issued by = Support</b>. This month is 100% tagged, so it's the most trustworthy read &mdash; the all-time figure (74.3%) is inflated by years of untagged bugs. See the Escape Rate tab for why.</div>
+        <span class="eyebrow">Defect escape rate</span>
+        <div class="val" id="kpiEscapeRate">0<span class="unit">%</span></div>
+        <div class="sub" id="kpiEscapeRateSub">&nbsp;</div>
+        <select id="escapeRangeSelect" style="margin-top:9px; width:100%; font-size:12px; padding:6px 8px;"></select>
       </div>
       <div class="kpi" style="--accent:var(--auto)">
         <span class="eyebrow">Found by QA Automation</span>
@@ -230,10 +231,37 @@
   </section>
 
   <section>
+    <div class="sec-head">
+      <div>
+        <h2>Escape rate by month &amp; field completion</h2>
+        <p>Support &divide; categorized bugs, per month &mdash; the number the KPI above draws on when a monthly range is selected. Bar opacity reflects field-completion confidence. Field completion (right) is what makes a given month's rate trustworthy: a month with few bugs tagged is a small, skewed sample.</p>
+      </div>
+    </div>
     <div class="grid2">
       <div class="card">
-        <h3>Latest vs. previous version &mdash; quality comparison</h3>
-        <div class="hint">2.0.1-beta3 (latest) vs. 2.0.1-beta2 (previous), broken down by who found the bug. Small samples &mdash; read as a directional signal, not a verdict.</div>
+        <h3>Escape rate by month</h3>
+        <div class="chart-wrap" style="height:240px;"><canvas id="monthlyChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Field completion by month</h3>
+        <div class="hint">Share of bugs created that month with Issued by populated at all.</div>
+        <table style="margin-top:4px;">
+          <thead><tr><th>Month</th><th>Bugs created</th><th>Tagged</th><th>Completion</th><th>Escape rate</th></tr></thead>
+          <tbody id="monthlyTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="grid2">
+      <div class="card">
+        <h3>Version quality comparison</h3>
+        <div class="controls" style="margin-bottom:10px;">
+          <div class="ctrl-group"><span class="ctrl-label">Version A</span><select id="cmpVerA"></select></div>
+          <div class="ctrl-group"><span class="ctrl-label">Version B</span><select id="cmpVerB"></select></div>
+        </div>
+        <div class="hint">Defaults to latest vs. previous (dev-branch builds excluded from that default — see the note on the banner above) — pick any two versions to compare instead. Small samples &mdash; read as a directional signal, not a verdict.</div>
         <div class="chart-wrap" style="height:210px;"><canvas id="compareChart"></canvas></div>
       </div>
       <div class="card">
@@ -339,24 +367,13 @@
       <span class="eyebrow">What's actually happening</span>
       "Issued by" tagging discipline has changed sharply over time. In <b style="color:var(--text)">July</b>, only 57 of 158 bugs (36%) had the field set at all &mdash; too little and too skewed toward Support (who gets auto-tagged via the support intake process) to trust. By <b style="color:var(--text)">August</b> that jumped to 82% tagged. Since <b style="color:var(--text)">September 1</b>, it's <b style="color:var(--text)">100%</b> &mdash; every single new bug has Issued by set. The all-time 74.3% figure blends all of that together, so it mostly reflects old data-entry gaps, not current quality.
     </div>
-    <div class="grid2">
-      <div class="card">
-        <h3>Escape rate by month</h3>
-        <div class="hint">Support ÷ categorized bugs, per month. Bar opacity reflects field-completion confidence &mdash; July is shown faded because only 36% of its bugs were tagged.</div>
-        <div class="chart-wrap" style="height:240px;"><canvas id="monthlyChart"></canvas></div>
-      </div>
-      <div class="card">
-        <h3>Field completion by month</h3>
-        <div class="hint">Share of bugs created that month with Issued by populated at all &mdash; the thing that makes a month's escape rate trustworthy.</div>
-        <table style="margin-top:4px;">
-          <thead><tr><th>Month</th><th>Bugs created</th><th>Tagged</th><th>Completion</th><th>Escape rate</th></tr></thead>
-          <tbody id="monthlyTableBody"></tbody>
-        </table>
-      </div>
+    <div class="callout" style="margin-top:14px;">
+      <span class="eyebrow">Escape rate by month, moved to the Overview tab</span>
+      The month-by-month chart and field-completion table now live on the <b style="color:var(--text)">Overview</b> tab, right under the portfolio headline &mdash; along with a date-range picker (this month / a specific month / this year / last year / all time) on the headline escape-rate KPI itself, so you're not stuck with a fixed window.
     </div>
     <div class="callout teal">
       <span class="eyebrow">Recommendation</span>
-      Use <b>trailing-month escape rate</b> (currently <span id="recoRate">42.2%</span>, from <span id="recoMonth">September</span>) as the headline number going forward, not the all-time figure &mdash; that's what the Overview tab now shows. Keep watching field completion each month; once 2&ndash;3 more fully-tagged months land, a rolling 3-month average will be more stable than any single month. The all-time and customizable views below are still useful for historical/audit purposes, just not as the primary KPI.
+      Use <b>trailing-month escape rate</b> (currently <span id="recoRate">42.2%</span>, from <span id="recoMonth">September</span>) as the default view, not the all-time figure &mdash; that's the Overview tab's default. Keep watching field completion each month; once 2&ndash;3 more fully-tagged months land, a rolling 3-month average will be more stable than any single month. The all-time and customizable views below are still useful for historical/audit purposes, just not as the primary KPI.
     </div>
   </section>
 
@@ -408,7 +425,7 @@
     <div class="sec-head">
       <div>
         <h2>Process signals &mdash; reassignment &amp; QA rework</h2>
-        <p>Derived from each bug's Jira changelog, across all FW + FE bugs (not limited to the firmware-version-tagged subset used elsewhere on this page). "Returned from QA to Open" counts a status change directly from <span class="mono">QA</span> to <span class="mono">Open</span> &mdash; the two status names actually used in this Jira workflow (checked against the real transition history, not assumed).</p>
+        <p>Derived from each bug's Jira changelog, across all FW + FE bugs (not limited to the firmware-version-tagged subset used elsewhere on this page). "Returned from QA" counts a status change directly from <span class="mono">QA</span> to either <span class="mono">Open</span> or <span class="mono">In Progress</span> &mdash; the real status names this Jira workflow actually uses (checked against the real transition history, not assumed; this workflow has no separate "In Development" status, "In Progress" is its equivalent). Bugs that bounce back from QA repeatedly are the ones worth a closer look &mdash; not just badly caught, but not well implemented the first time.</p>
       </div>
     </div>
     <div class="kpi-grid">
@@ -423,7 +440,7 @@
         <div class="sub" id="kpiBugsReassignedSub">&nbsp;</div>
       </div>
       <div class="kpi" style="--accent:var(--red)">
-        <span class="eyebrow">QA &rarr; Open reopen events</span>
+        <span class="eyebrow">QA &rarr; Open/In Progress events</span>
         <div class="val" id="kpiQaReopens">0</div>
         <div class="sub" id="kpiQaReopensSub">&nbsp;</div>
       </div>
@@ -431,6 +448,24 @@
         <span class="eyebrow">Distinct bugs reopened from QA</span>
         <div class="val" id="kpiQaReopenIssues">0</div>
         <div class="sub" id="kpiQaReopenIssuesSub">&nbsp;</div>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:16px;">
+      <div class="card">
+        <h3>Most-reassigned bugs</h3>
+        <div class="hint">How many times each bug's Assignee changed. Click a key to open it in Jira and see why.</div>
+        <table>
+          <thead><tr><th>Bug</th><th>Reassignments</th></tr></thead>
+          <tbody id="reassignedTableBody"></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Bugs returned from QA</h3>
+        <div class="hint">How many times each bug bounced from QA back to Open/In Progress, and which of those it landed on. Click a key to open it in Jira.</div>
+        <table>
+          <thead><tr><th>Bug</th><th>Times returned</th><th>Sent back to</th></tr></thead>
+          <tbody id="qaReturnedTableBody"></tbody>
+        </table>
       </div>
     </div>
   </section>
@@ -599,6 +634,17 @@ if(typeof Chart !== 'undefined'){
 }
 
 const COLORS = {support:'#E2604F', qa:'#3FB6A8', po:'#E8A33D', dev:'#5B9EE8', integrations:'#8E7CE8', auto:'#C77DFF', other:'#6B7385', empty:'#3A4150'};
+const JIRA_BROWSE_BASE = 'https://shellyusa.atlassian.net/browse/';
+// A "dev branch" build in this team's own versioning convention: patch
+// number 99 (e.g. 2.1.99, 2.1.99-cameraprod8) marks an internal/nightly or
+// separate-product-line branch, never something meant to read as "latest
+// tracked release." There's no dedicated field distinguishing beta vs.
+// stable, so among the remaining (non-dev-branch) versions, the newest one
+// is used as "latest" — which in practice usually is the newest beta.
+function isDevBranch(v){
+  const m = String(v).match(/^\d+\.\d+\.(\d+)/);
+  return !!m && +m[1] === 99;
+}
 
 /* ============================================================
    Data — seeded from the weekly GitHub Actions snapshot below.
@@ -621,6 +667,17 @@ let FW_TOTAL = 528, FE_TOTAL = 705;
 /* GENDATA:CHANGELOG_STATS:START */
 let CHANGELOG_STATS = {"scopeTotal": 1233, "assigneeChanges": 0, "issuesWithAssigneeChange": 0, "qaToOpenEvents": 0, "qaToOpenIssues": 0};
 /* GENDATA:CHANGELOG_STATS:END */
+
+/* Per-issue detail behind CHANGELOG_STATS, sorted by count desc — powers the
+   linked tables in the Process signals section. toStatuses on a
+   QA_RETURNED_ISSUES entry is which of QA_REOPEN_TARGETS (Open / In
+   Progress) that bug's QA→? transitions actually landed on. */
+/* GENDATA:REASSIGNED_ISSUES:START */
+let REASSIGNED_ISSUES = [];
+/* GENDATA:REASSIGNED_ISSUES:END */
+/* GENDATA:QA_RETURNED_ISSUES:START */
+let QA_RETURNED_ISSUES = [];
+/* GENDATA:QA_RETURNED_ISSUES:END */
 
 /* ---------- Firmware-version-tagged issue-level dataset (28 FW bugs) ---------- */
 /* versions[] can hold >1 entry when an issue was verified across a regression window */
@@ -697,11 +754,16 @@ let MAINLINE_ORDER = ["2.1.99", "2.1.99-cameraprod8", "2.1.99-cameraprod7", "2.1
 /* GENDATA:VERSIONS:END */
 
 /* ---------- Monthly trend (data-quality-aware) ---------- */
+/* Build script now pulls 24 trailing months (year/monthIndex included on
+   each entry) so the Overview date-range picker can aggregate "this year" /
+   "last year" client-side without a separate query path. This shipped
+   snapshot still only has the 3 months fetched before that change — the
+   next weekly build / live refresh backfills the rest. */
 /* GENDATA:MONTHLY:START */
 let MONTHLY = [
-  {month:'Jul 2026', total:158, tagged:80, support:52, completion:51, lowConfidence:true},
-  {month:'Aug 2026', total:173, tagged:150, support:66, completion:87, lowConfidence:false},
-  {month:'Sep 2026 (to date)', total:101, tagged:101, support:40, completion:100, lowConfidence:false},
+  {month:'Jul 2026', year:2026, monthIndex:6, total:158, tagged:80, support:52, completion:51, lowConfidence:true},
+  {month:'Aug 2026', year:2026, monthIndex:7, total:173, tagged:150, support:66, completion:87, lowConfidence:false},
+  {month:'Sep 2026 (to date)', year:2026, monthIndex:8, total:101, tagged:101, support:40, completion:100, lowConfidence:false},
 ];
 /* GENDATA:MONTHLY:END */
 
@@ -780,7 +842,130 @@ function severityColor(pct){ if(pct>=50) return 'var(--red)'; if(pct>=20) return
    chart without doing a full renderDashboard() pass.
    ============================================================ */
 let LATEST, PREVIOUS, verOrder = [], CATS = [];
-let deviceBarChart, componentBarChart, escapeGauge;
+let deviceBarChart, componentBarChart, escapeGauge, compareChartInst, monthlyChartInst;
+
+/* ---------- Version compare (Overview tab, user-selectable pair) ---------- */
+function renderCompare(verA, verB){
+  const aIssues = issuesForVersion(verA), bIssues = issuesForVersion(verB);
+  const aTally = tally(aIssues), bTally = tally(bIssues);
+  const aEsc = escapeStats(aIssues), bEsc = escapeStats(bIssues);
+  if(compareChartInst) safeChart(() => compareChartInst.destroy());
+  compareChartInst = safeChart(() => new Chart(document.getElementById('compareChart'), {
+    type:'bar',
+    data:{
+      labels:['Support','QA','QA Automation','Other'],
+      datasets:[
+        {label:verB, data:[bTally.Support,bTally.QA,bTally['QA Automation'],bTally.Other], backgroundColor:'#3A4150', borderRadius:5, barPercentage:.6},
+        {label:verA, data:[aTally.Support,aTally.QA,aTally['QA Automation'],aTally.Other], backgroundColor:COLORS.support, borderRadius:5, barPercentage:.6},
+      ]
+    },
+    options:{responsive:true, maintainAspectRatio:false,
+      plugins:{legend:{position:'bottom', labels:{boxWidth:10, padding:14}}},
+      scales:{y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, x:{grid:{display:false}}}
+    }
+  }));
+  document.getElementById('compareNarrative').innerHTML = `
+    <p><b style="color:var(--text)">${verA}</b> has ${aIssues.length} tagged bugs (${aEsc.support} Support-reported) &mdash; escape rate <b style="color:var(--text)">${aEsc.pct}%</b>.</p>
+    <p><b style="color:var(--text)">${verB}</b> has ${bIssues.length} tagged bugs (${bEsc.support} Support-reported) &mdash; escape rate <b style="color:var(--text)">${bEsc.pct}%</b>.</p>
+    <p>Pick any two versions above to compare. Small samples on a brand-new version are directional, not conclusive.</p>
+  `;
+}
+
+/* ---------- Escape-rate date range (Overview tab) ---------- */
+// "This year"/"Last year" aggregate MONTHLY buckets client-side; "All time"
+// reuses the already-computed full-history FW_ISSUED/FE_ISSUED totals
+// instead of summing months, since MONTHLY may not cover the full history.
+function computeRangeStats(range){
+  if(range === 'all-time'){
+    const supportAll = (FW_ISSUED.Support||0) + (FE_ISSUED.Support||0);
+    const emptyAll = (FW_ISSUED.Empty||0) + (FE_ISSUED.Empty||0);
+    const totalAll = FW_TOTAL + FE_TOTAL;
+    return { support: supportAll, tagged: totalAll - emptyAll, total: totalAll, label: 'all time' };
+  }
+  if(range === 'this-year' || range === 'last-year'){
+    const y = new Date().getUTCFullYear() - (range==='last-year' ? 1 : 0);
+    const months = MONTHLY.filter(m=>m.year===y);
+    return {
+      support: months.reduce((s,m)=>s+m.support,0),
+      tagged: months.reduce((s,m)=>s+m.tagged,0),
+      total: months.reduce((s,m)=>s+m.total,0),
+      label: String(y),
+    };
+  }
+  if(range === 'this-month'){
+    const m = MONTHLY[MONTHLY.length-1];
+    return m ? { support:m.support, tagged:m.tagged, total:m.total, label:m.month } : { support:0, tagged:0, total:0, label:'this month' };
+  }
+  if(range && range.indexOf('m:')===0){
+    const m = MONTHLY[+range.slice(2)];
+    return m ? { support:m.support, tagged:m.tagged, total:m.total, label:m.month } : { support:0, tagged:0, total:0, label:'—' };
+  }
+  return { support:0, tagged:0, total:0, label:'—' };
+}
+function populateEscapeRangeOptions(){
+  const sel = document.getElementById('escapeRangeSelect');
+  const prev = sel.value;
+  sel.innerHTML = '';
+  sel.appendChild(new Option('This month (default)','this-month'));
+  sel.appendChild(new Option('This year','this-year'));
+  sel.appendChild(new Option('Last year','last-year'));
+  sel.appendChild(new Option('All time','all-time'));
+  const sep = new Option('────────','');
+  sep.disabled = true;
+  sel.appendChild(sep);
+  MONTHLY.forEach((m,idx)=>{ sel.appendChild(new Option(m.month, 'm:'+idx)); });
+  const has = !!prev && Array.prototype.some.call(sel.options, o=>o.value===prev && !o.disabled);
+  sel.value = has ? prev : 'this-month';
+}
+function renderEscapeRangeKpi(range){
+  const {support, tagged, total, label} = computeRangeStats(range);
+  const pct = tagged ? Math.round(support/tagged*1000)/10 : 0;
+  const completion = total ? Math.round(tagged/total*100) : 0;
+  document.getElementById('kpiEscapeRate').innerHTML = pct + '<span class="unit">%</span>';
+  const lowConf = completion < 60 && range !== 'all-time';
+  document.getElementById('kpiEscapeRateSub').innerHTML =
+    `${support} of ${tagged} bugs${range==='all-time' ? '' : ' logged in ' + label} have <b style="color:var(--text)">Issued by = Support</b> ` +
+    `(our proxy for "a real customer hit this in production" &mdash; see the callout below). ` +
+    (range==='all-time'
+      ? `Full history, only ${completion}% tagged overall — inflated by years of untagged backlog; pick a recent range for a more trustworthy read.`
+      : `${completion}% of ${total} bugs in this range are tagged${lowConf ? ', a low-confidence sample' : ''}.`);
+}
+
+/* ---------- Monthly trend chart + field-completion table (Overview tab) ---------- */
+function renderMonthlyTrend(){
+  if(monthlyChartInst) safeChart(() => monthlyChartInst.destroy());
+  monthlyChartInst = safeChart(() => new Chart(document.getElementById('monthlyChart'), {
+    type:'bar',
+    data:{
+      labels: MONTHLY.map(m=>m.month),
+      datasets:[{
+        label:'Escape rate %',
+        data: MONTHLY.map(m=> m.tagged ? Math.round(m.support/m.tagged*1000)/10 : 0),
+        backgroundColor: MONTHLY.map(m=> m.lowConfidence ? 'rgba(226,96,79,.35)' : COLORS.support),
+        borderRadius:6, barPercentage:.55,
+      }]
+    },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false},
+        tooltip:{ callbacks:{ label:(c)=>{
+          const m = MONTHLY[c.dataIndex];
+          return [`${c.raw}% escape rate (${m.support} of ${m.tagged} tagged bugs)`, `${m.completion}% of ${m.total} bugs that month had Issued by set`];
+        }}}
+      },
+      scales:{ y:{beginAtZero:true, max:100, ticks:{callback:(v)=>v+'%'}, grid:{color:'#242A35'}}, x:{grid:{display:false}} }
+    }
+  }));
+  const tbody = document.getElementById('monthlyTableBody');
+  if(tbody){
+    tbody.innerHTML = MONTHLY.slice().reverse().map(m=>{
+      const pct = m.tagged ? Math.round(m.support / m.tagged * 1000) / 10 : 0;
+      const compClass = m.completion >= 90 ? 'support' : m.completion >= 60 ? 'po' : 'other';
+      const rateLabel = m.lowConfidence ? `${pct}% (low-confidence)` : `${pct}%`;
+      const rateStyle = m.lowConfidence ? 'style="color:var(--dim)"' : 'style="color:var(--text)"';
+      return `<tr><td style="color:var(--text)">${m.month}</td><td class="mono">${fmtN(m.total)}</td><td class="mono">${fmtN(m.tagged)}</td><td><span class="pill ${compClass}">${m.completion}%</span></td><td class="mono" ${rateStyle}>${rateLabel}</td></tr>`;
+    }).join('');
+  }
+}
 
 function recalcEscape(){
   const catListEl = document.getElementById('categoryList');
@@ -902,60 +1087,34 @@ function renderDashboard(){
   if(IS_LIVE){ liveDot.classList.remove('off'); liveLabel.textContent = 'Live from your Jira'; }
   else { liveDot.classList.add('off'); liveLabel.textContent = 'Weekly snapshot'; }
 
-  LATEST = MAINLINE_ORDER[0]; PREVIOUS = MAINLINE_ORDER[1];
+  // "Latest" skips dev-branch builds (patch 99) — see isDevBranch above.
+  // Falls back to the raw newest version if literally everything is a dev
+  // branch, rather than showing nothing.
+  const nonDevOrder = MAINLINE_ORDER.filter(v=>!isDevBranch(v));
+  LATEST = nonDevOrder[0] || MAINLINE_ORDER[0];
+  PREVIOUS = (nonDevOrder[0] ? nonDevOrder[1] : MAINLINE_ORDER[1]) || MAINLINE_ORDER[1];
 
-  // ---- Overview: latest vs previous compare chart ----
-  const latestIssues = issuesForVersion(LATEST), prevIssues = issuesForVersion(PREVIOUS);
-  const latestTally = tally(latestIssues), prevTally = tally(prevIssues);
-  document.getElementById('latestCount').textContent = latestIssues.length;
-  const latestEsc = escapeStats(latestIssues), prevEsc = escapeStats(prevIssues);
-  document.getElementById('latestEscape').textContent = latestEsc.pct + '%';
+  document.getElementById('latestCount').textContent = issuesForVersion(LATEST).length;
+  document.getElementById('latestEscape').textContent = escapeStats(issuesForVersion(LATEST)).pct + '%';
 
-  safeChart(() => new Chart(document.getElementById('compareChart'), {
-    type:'bar',
-    data:{
-      labels:['Support','QA','QA Automation','Other'],
-      datasets:[
-        {label:PREVIOUS, data:[prevTally.Support,prevTally.QA,prevTally['QA Automation'],prevTally.Other], backgroundColor:'#3A4150', borderRadius:5, barPercentage:.6},
-        {label:LATEST, data:[latestTally.Support,latestTally.QA,latestTally['QA Automation'],latestTally.Other], backgroundColor:COLORS.support, borderRadius:5, barPercentage:.6},
-      ]
-    },
-    options:{responsive:true, maintainAspectRatio:false,
-      plugins:{legend:{position:'bottom', labels:{boxWidth:10, padding:14}}},
-      scales:{y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, x:{grid:{display:false}}}
-    }
-  }));
-
-  document.getElementById('compareNarrative').innerHTML = `
-    <p><b style="color:var(--text)">${LATEST}</b> has ${latestIssues.length} tagged bugs so far (${latestEsc.support} Support-reported) &mdash; escape rate <b style="color:var(--text)">${latestEsc.pct}%</b>.</p>
-    <p><b style="color:var(--text)">${PREVIOUS}</b> has ${prevIssues.length} tagged bugs (${prevEsc.support} Support-reported) &mdash; escape rate <b style="color:var(--text)">${prevEsc.pct}%</b>.</p>
-    <p>Compare volume and escape rate between the two most recent versions to see whether quality is trending up or down as the release matures. Small samples on a brand-new version are directional, not conclusive.</p>
-  `;
+  // ---- Overview: version-compare chart (user-selectable, defaults to latest vs previous) ----
+  const cmpVerA = document.getElementById('cmpVerA'), cmpVerB = document.getElementById('cmpVerB');
+  cmpVerA.innerHTML = ''; cmpVerB.innerHTML = '';
+  MAINLINE_ORDER.forEach(v=>{
+    const label = v + (v===LATEST?'  (latest)':v===PREVIOUS?'  (previous)':'');
+    cmpVerA.appendChild(new Option(label, v));
+    cmpVerB.appendChild(new Option(label, v));
+  });
+  cmpVerA.value = LATEST; cmpVerB.value = PREVIOUS;
+  renderCompare(cmpVerA.value, cmpVerB.value);
 
   makePie('fwPie', FW_ISSUED);
   makePie('fePie', FE_ISSUED);
 
-  safeChart(() => new Chart(document.getElementById('monthlyChart'), {
-    type:'bar',
-    data:{
-      labels: MONTHLY.map(m=>m.month),
-      datasets:[{
-        label:'Escape rate %',
-        data: MONTHLY.map(m=> m.tagged ? Math.round(m.support/m.tagged*1000)/10 : 0),
-        backgroundColor: MONTHLY.map(m=> m.lowConfidence ? 'rgba(226,96,79,.35)' : COLORS.support),
-        borderRadius:6, barPercentage:.55,
-      }]
-    },
-    options:{ responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false},
-        tooltip:{ callbacks:{ label:(c)=>{
-          const m = MONTHLY[c.dataIndex];
-          return [`${c.raw}% escape rate (${m.support} of ${m.tagged} tagged bugs)`, `${m.completion}% of ${m.total} bugs that month had Issued by set`];
-        }}}
-      },
-      scales:{ y:{beginAtZero:true, max:100, ticks:{callback:(v)=>v+'%'}, grid:{color:'#242A35'}}, x:{grid:{display:false}} }
-    }
-  }));
+  // ---- Overview: escape-rate date range + monthly trend / field-completion table ----
+  populateEscapeRangeOptions();
+  renderEscapeRangeKpi(document.getElementById('escapeRangeSelect').value);
+  renderMonthlyTrend();
 
   // ---- Escape rate tab: customizable checkboxes ----
   const COMBINED = {};
@@ -1039,7 +1198,7 @@ function renderDashboard(){
   renderComponentBar('');
 
   // ---- Hydrate static headline/table text ----
-  hydrateStaticText(latestIssues, prevIssues);
+  hydrateStaticText();
 }
 
 /* ---------- Hydrate static headline/table text from the current data ---------- */
@@ -1057,28 +1216,18 @@ function hydrateStaticText(){
   setText('kpiTotalBugs', fmt(allTotal));
   setText('kpiTotalBugsSub', `FW ${fmt(FW_TOTAL)} · FE ${fmt(FE_TOTAL)} — every issue with issuetype = Bug, all statuses.`);
 
+  // Escape-rate KPI (date-range selectable) and the monthly trend chart /
+  // field-completion table are handled by renderEscapeRangeKpi() and
+  // renderMonthlyTrend(), called earlier in renderDashboard() — not here,
+  // so a range-dropdown change doesn't get clobbered by a later
+  // hydrateStaticText() call.
   const curMonth = MONTHLY[MONTHLY.length - 1];
   const curMonthPct = curMonth.tagged ? Math.round(curMonth.support / curMonth.tagged * 1000) / 10 : 0;
-  setText('kpiEscapeRate', curMonthPct);
-  document.getElementById('kpiEscapeRate').insertAdjacentHTML('beforeend', '<span class="unit">%</span>');
-  document.getElementById('kpiEscapeRateSub').innerHTML =
-    `${curMonth.support} of ${curMonth.tagged} bugs logged in ${curMonth.month} have <b style="color:var(--text)">Issued by = Support</b>. ` +
-    `That month is ${curMonth.completion}% tagged, so it's the most trustworthy read — see the Escape Rate tab for the full picture.`;
 
   setText('kpiQaAuto', fmt(FW_ISSUED['QA Automation'] || 0));
   setText('kpiVerTagged', fmt(ISSUES.length));
   setText('kpiVerTaggedSub', `FW bugs with the new Firmware Version field populated, spanning ${versionsWithData().length} distinct version values so far.`);
 
-  const tbody = document.getElementById('monthlyTableBody');
-  if(tbody){
-    tbody.innerHTML = MONTHLY.map(m=>{
-      const pct = m.tagged ? Math.round(m.support / m.tagged * 1000) / 10 : 0;
-      const compClass = m.completion >= 90 ? 'support' : m.completion >= 60 ? 'po' : 'other';
-      const rateLabel = m.lowConfidence ? `${pct}% (low-confidence)` : `${pct}%`;
-      const rateStyle = m.lowConfidence ? 'style="color:var(--dim)"' : 'style="color:var(--text)"';
-      return `<tr><td style="color:var(--text)">${m.month}</td><td class="mono">${fmt(m.total)}</td><td class="mono">${fmt(m.tagged)}</td><td><span class="pill ${compClass}">${m.completion}%</span></td><td class="mono" ${rateStyle}>${rateLabel}</td></tr>`;
-    }).join('');
-  }
   setText('recoRate', curMonthPct + '%');
   setText('recoMonth', curMonth.month.replace(/\s*\(.*\)/, ''));
 
@@ -1092,9 +1241,31 @@ function hydrateStaticText(){
   setText('kpiBugsReassigned', fmt(CHANGELOG_STATS.issuesWithAssigneeChange));
   setText('kpiBugsReassignedSub', `${CHANGELOG_STATS.scopeTotal ? Math.round(CHANGELOG_STATS.issuesWithAssigneeChange/CHANGELOG_STATS.scopeTotal*1000)/10 : 0}% of bugs scanned had the Assignee changed at least once.`);
   setText('kpiQaReopens', fmt(CHANGELOG_STATS.qaToOpenEvents));
-  setText('kpiQaReopensSub', 'Status changed directly from QA back to Open (counts every occurrence, including bugs bounced more than once).');
+  setText('kpiQaReopensSub', 'Status changed directly from QA back to Open or In Progress (counts every occurrence, including bugs bounced more than once).');
   setText('kpiQaReopenIssues', fmt(CHANGELOG_STATS.qaToOpenIssues));
   setText('kpiQaReopenIssuesSub', `${CHANGELOG_STATS.scopeTotal ? Math.round(CHANGELOG_STATS.qaToOpenIssues/CHANGELOG_STATS.scopeTotal*1000)/10 : 0}% of bugs scanned were sent back from QA at least once.`);
+
+  renderProcessSignalsTables();
+}
+
+/* Per-issue detail tables behind the Process signals KPIs, each row linking
+   straight to the real Jira issue so "why did this bounce" is one click
+   away instead of a number with no way to dig in. */
+function renderProcessSignalsTables(){
+  const jiraLink = (key) => `<a href="${JIRA_BROWSE_BASE}${key}" target="_blank" rel="noopener" style="color:var(--amber); text-decoration:none;">${key} &#8599;</a>`;
+
+  const reassignedBody = document.getElementById('reassignedTableBody');
+  if(reassignedBody){
+    reassignedBody.innerHTML = REASSIGNED_ISSUES.length
+      ? REASSIGNED_ISSUES.map(r=>`<tr><td>${jiraLink(r.key)}</td><td class="mono">${r.count}</td></tr>`).join('')
+      : `<tr><td colspan="2" style="color:var(--dim);">No data yet — populates on the next weekly build or a Live-data refresh.</td></tr>`;
+  }
+  const qaReturnedBody = document.getElementById('qaReturnedTableBody');
+  if(qaReturnedBody){
+    qaReturnedBody.innerHTML = QA_RETURNED_ISSUES.length
+      ? QA_RETURNED_ISSUES.map(r=>`<tr><td>${jiraLink(r.key)}</td><td class="mono">${r.count}</td><td>${(r.toStatuses||[]).join(', ')}</td></tr>`).join('')
+      : `<tr><td colspan="3" style="color:var(--dim);">No data yet — populates on the next weekly build or a Live-data refresh.</td></tr>`;
+  }
 }
 
 /* ============================================================
@@ -1115,6 +1286,9 @@ document.getElementById('devScopeToggle').addEventListener('click', e=>{
 });
 document.getElementById('devVersionSelect').addEventListener('change', function(){ renderDeviceBar('one', this.value); });
 document.getElementById('compVersionSelect').addEventListener('change', function(){ renderComponentBar(this.value); });
+document.getElementById('escapeRangeSelect').addEventListener('change', function(){ renderEscapeRangeKpi(this.value); });
+document.getElementById('cmpVerA').addEventListener('change', ()=>{ renderCompare(document.getElementById('cmpVerA').value, document.getElementById('cmpVerB').value); });
+document.getElementById('cmpVerB').addEventListener('change', ()=>{ renderCompare(document.getElementById('cmpVerA').value, document.getElementById('cmpVerB').value); });
 document.querySelectorAll('.tab-btn').forEach(btn=>{
   btn.addEventListener('click', ()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1240,31 +1414,56 @@ renderDashboard();
     }
     return all;
   }
-  function computeChangelogStats(issueChangeLogs, scopeTotal){
-    let assigneeChanges = 0, issuesWithAssigneeChange = 0, qaToOpenEvents = 0;
-    const qaToOpenIssues = new Set();
+  // Real status names for a QA rejection/reopen in this workflow (confirmed
+  // via JQL probes): "Open" (back to the backlog) or "In Progress" (this
+  // workflow's real equivalent of "in development" — there's no separate
+  // "In Development" status here).
+  const QA_REOPEN_TARGETS = ['Open', 'In Progress'];
+  function computeChangelogStats(issueChangeLogs, scopeTotal, issueKeyById){
+    let assigneeChanges = 0, qaToOpenEvents = 0;
+    const reassignedCounts = new Map();
+    const qaReturnedCounts = new Map();
     for(const entry of issueChangeLogs){
       const id = entry.issueId || entry.id;
+      const key = (issueKeyById && issueKeyById[id]) || id;
       const histories = entry.changeHistories || entry.histories || [];
-      let hadAssigneeChange = false;
       for(const item of histories){
         const field = item.field || item.fieldId;
         const fromVal = item.fromString !== undefined ? item.fromString : item.from;
         const toVal = item.toString !== undefined ? item.toString : item.to;
-        if(field === 'assignee'){ assigneeChanges++; hadAssigneeChange = true; }
-        if(field === 'status' && fromVal === 'QA' && toVal === 'Open'){
-          qaToOpenEvents++; qaToOpenIssues.add(id);
+        if(field === 'assignee'){
+          assigneeChanges++;
+          reassignedCounts.set(key, (reassignedCounts.get(key)||0)+1);
+        }
+        if(field === 'status' && fromVal === 'QA' && QA_REOPEN_TARGETS.includes(toVal)){
+          qaToOpenEvents++;
+          const cur = qaReturnedCounts.get(key) || { count:0, toStatuses:new Set() };
+          cur.count++; cur.toStatuses.add(toVal);
+          qaReturnedCounts.set(key, cur);
         }
       }
-      if(hadAssigneeChange) issuesWithAssigneeChange++;
     }
-    return { scopeTotal, assigneeChanges, issuesWithAssigneeChange, qaToOpenEvents, qaToOpenIssues: qaToOpenIssues.size };
+    const reassignedIssues = Array.from(reassignedCounts, ([key,count])=>({key,count}))
+      .sort((a,b)=> b.count-a.count || a.key.localeCompare(b.key));
+    const qaReturnedIssues = Array.from(qaReturnedCounts, ([key,v])=>({key, count:v.count, toStatuses:Array.from(v.toStatuses)}))
+      .sort((a,b)=> b.count-a.count || a.key.localeCompare(b.key));
+    return {
+      stats: {
+        scopeTotal, assigneeChanges,
+        issuesWithAssigneeChange: reassignedIssues.length,
+        qaToOpenEvents,
+        qaToOpenIssues: qaReturnedIssues.length,
+      },
+      reassignedIssues, qaReturnedIssues,
+    };
   }
   async function buildChangelogStats(proxyUrl, auth){
     const keyIssues = await jiraSearch(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug`, []);
+    const issueKeyById = {};
+    keyIssues.forEach(i=>{ issueKeyById[i.id] = i.key; });
     const issueKeys = keyIssues.map(i=>i.key);
     const changelogs = await jiraChangelogBulkFetch(proxyUrl, auth, issueKeys);
-    return computeChangelogStats(changelogs, issueKeys.length);
+    return computeChangelogStats(changelogs, issueKeys.length, issueKeyById);
   }
   // The new search endpoint dropped "total" entirely, so counts now come
   // from the dedicated POST /rest/api/3/search/approximate-count endpoint.
@@ -1353,18 +1552,27 @@ renderDashboard();
     const start = new Date(Date.UTC(y, m, 1)), end = new Date(Date.UTC(y, m+1, 1));
     const fmt = (d)=>d.toISOString().slice(0,10);
     const label = start.toLocaleString('en-US', { month:'short', year:'numeric', timeZone:'UTC' });
-    return { start: fmt(start), end: fmt(end), label: monthsAgo===0 ? `${label} (to date)` : label };
+    return {
+      start: fmt(start), end: fmt(end),
+      label: monthsAgo===0 ? `${label} (to date)` : label,
+      year: start.getUTCFullYear(), monthIndex: start.getUTCMonth(),
+    };
   }
+  // Default 24 months back so the Overview date-range dropdown can offer
+  // "this year"/"last year" via client-side aggregation of these buckets —
+  // "all time" doesn't need month buckets, it reuses the full-history
+  // FW_ISSUED/FE_ISSUED totals instead (see computeRangeStats above).
   async function buildMonthlyTrend(proxyUrl, auth, numMonths){
+    numMonths = numMonths || 24;
     const months = [];
     for(let i=numMonths-1; i>=0; i--){
-      const { start, end, label } = monthRange(i);
+      const { start, end, label, year, monthIndex } = monthRange(i);
       const total = await jiraCount(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug AND created >= "${start}" AND created < "${end}"`);
       const empty = total===0 ? 0 : await jiraCount(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug AND created >= "${start}" AND created < "${end}" AND cf[11895] is EMPTY`);
       const tagged = total - empty;
       const support = tagged===0 ? 0 : await jiraCount(proxyUrl, auth, `project in (FW, FE) AND issuetype = Bug AND created >= "${start}" AND created < "${end}" AND cf[11895] = "Support"`);
       const completion = total===0 ? 0 : Math.round((tagged/total)*100);
-      months.push({ month: label, total, tagged, support, completion, lowConfidence: completion < 60 });
+      months.push({ month: label, year, monthIndex, total, tagged, support, completion, lowConfidence: completion < 60 });
     }
     return months;
   }
@@ -1377,8 +1585,8 @@ renderDashboard();
     ]);
     const issues = await buildFirmwareVersionIssues(proxyUrl, auth);
     const { list: supportByDevice, stats: supportStats } = await buildSupportByDevice(proxyUrl, auth);
-    const monthly = await buildMonthlyTrend(proxyUrl, auth, 3);
-    const changelogStats = await buildChangelogStats(proxyUrl, auth);
+    const monthly = await buildMonthlyTrend(proxyUrl, auth, 24);
+    const { stats: changelogStats, reassignedIssues, qaReturnedIssues } = await buildChangelogStats(proxyUrl, auth);
     const versionSet = new Set();
     issues.forEach(i => i.versions.forEach(v => versionSet.add(v)));
     const mainlineOrder = Array.from(versionSet).sort(compareVersions);
@@ -1389,6 +1597,8 @@ renderDashboard();
     MAINLINE_ORDER = mainlineOrder.length ? mainlineOrder : MAINLINE_ORDER;
     MONTHLY = monthly;
     CHANGELOG_STATS = changelogStats;
+    REASSIGNED_ISSUES = reassignedIssues;
+    QA_RETURNED_ISSUES = qaReturnedIssues;
     FETCHED_AT_ISO = new Date().toISOString();
     IS_LIVE = true;
     renderDashboard();
@@ -1399,7 +1609,7 @@ renderDashboard();
     if(!email || !token){ setStatus('err', 'Enter your Jira email and API token.'); return; }
     if(!proxyUrl){ setStatus('err', 'Enter the read-only relay URL — see the note below for what this is and how to get one.'); return; }
     saveBtn.disabled = true;
-    setStatus('pending', 'Connecting to Jira through your relay… pulling changelogs for ~1,200 bugs can take a little longer than the rest.');
+    setStatus('pending', 'Connecting to Jira through your relay… this can take a minute or so — it pulls 24 months of history plus changelogs for ~1,200 bugs.');
     try{
       await liveRefresh(email, token, proxyUrl);
       saveCreds({ email, token, proxyUrl });
