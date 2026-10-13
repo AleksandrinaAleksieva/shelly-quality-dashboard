@@ -201,37 +201,14 @@
   <section>
     <div class="sec-head">
       <div>
-        <h2>Bugs by device (firmware-version-tagged)</h2>
-        <p>Firmware-version-tagged bugs grouped by hardware device. Use the toggle to view all versions combined or a single version.</p>
-      </div>
-      <div class="toggle-row" id="devScopeToggle">
-        <button class="active" data-scope="all">All versions</button>
-        <button data-scope="one">Single version</button>
-      </div>
-    </div>
-    <div class="controls" id="devVersionWrap" style="display:none;">
-      <div class="ctrl-group">
-        <span class="ctrl-label">Version</span>
-        <select id="devVersionSelect"></select>
-      </div>
-    </div>
-    <div class="card">
-      <div class="chart-wrap" style="height:320px;"><canvas id="deviceBarChart"></canvas></div>
-    </div>
-  </section>
-
-  <section>
-    <div class="sec-head">
-      <div>
-        <h2>Found by QA automation</h2>
-        <p>Bugs whose <span class="mono">Issued by</span> is <b style="color:var(--text)">QA Automation</b> &mdash; caught by automated test suites before a human tester or a customer saw them. Covers projects FW and FE, issuetype = Bug, all statuses.</p>
+        <h2>Found by nightly automation</h2>
+        <p>Bugs found by the automated test suites during the <b style="color:var(--text)">nightly executions</b> (<span class="mono">Issued by</span> = <b style="color:var(--text)">QA Automation</b>), before a human tester or a customer saw them. Covers projects FW and FE, issuetype = Bug, all statuses.</p>
       </div>
     </div>
     <div class="kpi-grid">
-      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Total found by automation</span><div class="val" id="autoTotal">0</div><div class="sub" id="autoTotalSub">&nbsp;</div></div>
-      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Share of internally caught</span><div class="val" id="autoShare">0<span class="unit">%</span></div><div class="sub" id="autoShareSub">&nbsp;</div></div>
-      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">By project</span><div class="val" id="autoByProject">0 / 0</div><div class="sub">FW / FE</div></div>
-      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">On the latest version</span><div class="val" id="autoLatest">0</div><div class="sub" id="autoLatestSub">&nbsp;</div></div>
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Found by nightly automation</span><div class="val" id="autoTotal">0</div><div class="sub" id="autoTotalSub">&nbsp;</div></div>
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Automation share of pre-release catches</span><div class="val" id="autoShare">0<span class="unit">%</span></div><div class="sub" id="autoShareSub">&nbsp;</div></div>
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Nightly automation, latest version</span><div class="val" id="autoLatest">0</div><div class="sub" id="autoLatestSub">&nbsp;</div></div>
     </div>
   </section>
 
@@ -254,24 +231,57 @@
         <div class="sub" id="kpiEscapeRateSub">&nbsp;</div>
         <select id="escapeRangeSelect" style="margin-top:9px; width:100%; font-size:12px; padding:6px 8px;"></select>
       </div>
-      <div class="kpi" style="--accent:var(--teal)">
-        <span class="eyebrow">Firmware-version tagged</span>
-        <div class="val" id="kpiVerTagged">28</div>
-        <div class="sub" id="kpiVerTaggedSub">FW bugs with the new Firmware Version field populated, spanning 12 distinct version values so far.</div>
-      </div>
     </div>
   </section>
 
   <section>
     <div class="sec-head">
       <div>
-        <h2>Escape rate by month</h2>
+        <h2>Bugs by device</h2>
+        <p>Every Shelly device that has at least one bug, most bugs first. This counts bugs that have a Firmware Version set, so each one is tied to a specific release. A bug that affects several devices is counted once for each of them. Choose <b style="color:var(--text)">All versions</b> to see the total across every release, or <b style="color:var(--text)">Single version</b> to see only the bugs reported against one release.</p>
+      </div>
+      <div class="toggle-row" id="devScopeToggle">
+        <button class="active" data-scope="all">All versions</button>
+        <button data-scope="one">Single version</button>
+      </div>
+    </div>
+    <div class="controls" id="devVersionWrap" style="display:none;">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Version</span>
+        <select id="devVersionSelect"></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="hint" id="deviceBarHint" style="margin-bottom:8px;">&nbsp;</div>
+      <div class="chart-wrap" id="deviceBarWrap" style="height:320px;"><canvas id="deviceBarChart"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Escape rate &amp; bug volume by month</h2>
         <p>Support &divide; categorized bugs, per month &mdash; the number the KPI above draws on when a monthly range is selected. Faded bars are low-confidence months &mdash; too few bugs had Issued by filled in, so the rate is a small, skewed sample.</p>
       </div>
     </div>
     <div class="card">
       <h3>Escape rate by month</h3>
       <div class="chart-wrap" style="height:260px;"><canvas id="monthlyChart"></canvas></div>
+    </div>
+    <div class="card" style="margin-top:18px;">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+        <div>
+          <h3>Bugs reported per month</h3>
+          <div class="hint" id="volumeHint">&nbsp;</div>
+        </div>
+        <div class="toggle-row" id="volumeToggle">
+          <button class="active" data-src="all">All bugs</button>
+          <button data-src="support">Support only</button>
+          <button data-src="internal">Development / internal only</button>
+        </div>
+      </div>
+      <div id="volumeTotals" style="display:flex; gap:10px; flex-wrap:wrap; margin:6px 0 10px;"></div>
+      <div class="chart-wrap" style="height:260px;"><canvas id="volumeChart"></canvas></div>
     </div>
   </section>
 
@@ -1004,6 +1014,53 @@ function renderMonthlyTrend(){
   }));
 }
 
+
+function renderVolumeTotals(){
+  const el = document.getElementById('volumeTotals'); if(!el) return;
+  const y = new Date().getUTCFullYear();
+  const cur = MONTHLY[MONTHLY.length-1];
+  const rows = [
+    ['This month', cur ? [cur] : [], cur ? cur.month : ''],
+    ['This year ('+y+')', MONTHLY.filter(m=>m.year===y), 'Jan to now'],
+    ['Last year ('+(y-1)+')', MONTHLY.filter(m=>m.year===y-1), 'full year'],
+  ];
+  el.innerHTML = rows.map(([title, ms, sub])=>{
+    const total = ms.reduce((a,m)=>a+m.total,0), sup = ms.reduce((a,m)=>a+m.support,0);
+    return `<div style="background:var(--panel2); border:1px solid var(--line); border-radius:8px; padding:8px 14px; min-width:150px;">
+      <div style="font-size:11px; color:var(--dim); text-transform:uppercase; letter-spacing:.04em;">${title}</div>
+      <div class="mono" style="font-size:22px; font-weight:700; color:var(--text);">${fmtN(total)}</div>
+      <div style="font-size:11.5px; color:var(--sub);">${fmtN(sup)} Support &middot; ${fmtN(total-sup)} other &middot; ${sub}</div></div>`;
+  }).join('');
+}
+
+let volumeChartInst, volumeSrc = 'all';
+function renderVolumeChart(){
+  const src = volumeSrc;
+  const sup = MONTHLY.map(m=>m.support||0);
+  const internal = MONTHLY.map(m=>Math.max(0,(m.tagged||0)-(m.support||0)));
+  const untagged = MONTHLY.map(m=>Math.max(0,(m.total||0)-(m.tagged||0)));
+  const sets = [];
+  if(src!=='internal') sets.push({label:'Support-reported', data:sup, backgroundColor:COLORS.support, borderRadius:4, stack:'v'});
+  if(src!=='support')  sets.push({label:'Development / internal', data:internal, backgroundColor:COLORS.dev, borderRadius:4, stack:'v'});
+  if(src==='all')      sets.push({label:'Source not set', data:untagged, backgroundColor:COLORS.empty, borderRadius:4, stack:'v'});
+  const totalShown = MONTHLY.reduce((a,m,i)=> a + (src==='support'?sup[i]: src==='internal'?internal[i]: (m.total||0)),0);
+  const hint = document.getElementById('volumeHint');
+  if(hint) hint.textContent = {
+    all:'All FW + FE bugs created each month, split by who reported them. "Source not set" are bugs where Issued by was left empty.',
+    support:'Only bugs reported by Support (customer-reported / production).',
+    internal:'Only bugs found internally (QA, QA Automation, PO, Development, Integrations, Other).'
+  }[src] + ` ${fmtN(totalShown)} bugs across the ${MONTHLY.length} months shown.`;
+  if(volumeChartInst) safeChart(() => volumeChartInst.destroy());
+  volumeChartInst = safeChart(() => new Chart(document.getElementById('volumeChart'), {
+    type:'bar',
+    data:{ labels: MONTHLY.map(m=>m.month), datasets: sets },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:sets.length>1, position:'bottom'}, tooltip:{mode:'index'} },
+      scales:{ y:{beginAtZero:true, stacked:true, ticks:{precision:0}, grid:{color:'#242A35'}}, x:{stacked:true, grid:{display:false}} }
+    }
+  }));
+}
+
 function recalcEscape(){
   const catListEl = document.getElementById('categoryList');
   const checks = catListEl.querySelectorAll('input[type=checkbox]');
@@ -1171,14 +1228,20 @@ function renderTimeViews(){
 function renderDeviceBar(scope, version){
   const list = scope==='all' ? ISSUES : issuesForVersion(version);
   const map = countBy(list, i=>i.device.split(' / '));
-  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1]);
+  const entries = Object.entries(map).sort((a,b)=>b[1]-a[1] || a[0].localeCompare(b[0]));
+  const wrap = document.getElementById('deviceBarWrap');
+  if(wrap) wrap.style.height = Math.max(160, entries.length*28 + 50) + 'px';
+  const hint = document.getElementById('deviceBarHint');
+  if(hint) hint.textContent = entries.length
+    ? `${entries.length} devices, ${list.length} bugs ` + (scope==='all' ? 'across all versions.' : `on version ${version}.`)
+    : 'No bugs for this selection.';
   if(deviceBarChart) safeChart(() => deviceBarChart.destroy());
   deviceBarChart = safeChart(() => new Chart(document.getElementById('deviceBarChart'), {
     type:'bar',
     data:{ labels:entries.map(e=>e[0]), datasets:[{label:'Bugs', data:entries.map(e=>e[1]), backgroundColor:'#E8A33D', borderRadius:5}] },
     options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
       plugins:{legend:{display:false}},
-      scales:{x:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, y:{grid:{display:false}}}
+      scales:{x:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, y:{grid:{display:false}, ticks:{autoSkip:false}}}
     }
   }));
 }
@@ -1241,6 +1304,8 @@ function renderDashboard(){
   populateEscapeRangeOptions();
   renderEscapeRangeKpi(document.getElementById('escapeRangeSelect').value);
   renderMonthlyTrend();
+  renderVolumeChart();
+  renderVolumeTotals();
 
   // ---- Escape rate tab: customizable checkboxes ----
   const COMBINED = {};
@@ -1384,13 +1449,12 @@ function renderAutomationStats(){
   const fw=FW_ISSUED['QA Automation']||0, fe=FE_ISSUED['QA Automation']||0, tot=fw+fe;
   const internal=['QA','QA Automation','PO','Development','Integrations','Other'].reduce((a,k)=>a+(FW_ISSUED[k]||0)+(FE_ISSUED[k]||0),0);
   set('autoTotal', fmtN(tot));
-  set('autoTotalSub', 'FW + FE bugs with Issued by = QA Automation.');
+  set('autoTotalSub', 'FW + FE bugs found by the automated nightly runs (Issued by = QA Automation).');
   set('autoShare', (internal?Math.round(tot/internal*1000)/10:0)+'<span class="unit">%</span>');
-  set('autoShareSub', `${fmtN(tot)} of ${fmtN(internal)} bugs caught before release (everything tagged except Support).`);
-  set('autoByProject', `${fmtN(fw)} / ${fmtN(fe)}`);
+  set('autoShareSub', `Nightly automation found ${fmtN(tot)} of the ${fmtN(internal)} bugs caught before release (all tagged bugs except Support-reported ones).`);
   const latest=issuesForVersion(LATEST).filter(i=>i.issuedBy==='QA Automation').length;
   set('autoLatest', fmtN(latest));
-  set('autoLatestSub', `Firmware-version-tagged FW bugs on ${LATEST} found by automation.`);
+  set('autoLatestSub', `Bugs on ${LATEST} found by the nightly automated runs.`);
 }
 
 function renderProcessSignalsTables(){
@@ -1417,6 +1481,12 @@ function renderProcessSignalsTables(){
 document.getElementById('verSelect').addEventListener('change', renderVersionExplorer);
 document.getElementById('verDeviceFilter').addEventListener('change', renderVersionExplorer);
 document.getElementById('verComponentFilter').addEventListener('change', renderVersionExplorer);
+document.getElementById('volumeToggle').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  volumeSrc = b.dataset.src;
+  document.querySelectorAll('#volumeToggle button').forEach(x=>x.classList.toggle('active', x===b));
+  renderVolumeChart();
+});
 document.getElementById('timeGran').addEventListener('change', renderTimeViews);
 document.getElementById('timeScope').addEventListener('change', renderTimeViews);
 document.getElementById('categoryList').addEventListener('change', recalcEscape);
