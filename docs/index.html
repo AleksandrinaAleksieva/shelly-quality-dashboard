@@ -201,6 +201,43 @@
   <section>
     <div class="sec-head">
       <div>
+        <h2>Bugs by device (firmware-version-tagged)</h2>
+        <p>Firmware-version-tagged bugs grouped by hardware device. Use the toggle to view all versions combined or a single version.</p>
+      </div>
+      <div class="toggle-row" id="devScopeToggle">
+        <button class="active" data-scope="all">All versions</button>
+        <button data-scope="one">Single version</button>
+      </div>
+    </div>
+    <div class="controls" id="devVersionWrap" style="display:none;">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Version</span>
+        <select id="devVersionSelect"></select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="chart-wrap" style="height:320px;"><canvas id="deviceBarChart"></canvas></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Found by QA automation</h2>
+        <p>Bugs whose <span class="mono">Issued by</span> is <b style="color:var(--text)">QA Automation</b> &mdash; caught by automated test suites before a human tester or a customer saw them. Covers projects FW and FE, issuetype = Bug, all statuses.</p>
+      </div>
+    </div>
+    <div class="kpi-grid">
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Total found by automation</span><div class="val" id="autoTotal">0</div><div class="sub" id="autoTotalSub">&nbsp;</div></div>
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">Share of internally caught</span><div class="val" id="autoShare">0<span class="unit">%</span></div><div class="sub" id="autoShareSub">&nbsp;</div></div>
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">By project</span><div class="val" id="autoByProject">0 / 0</div><div class="sub">FW / FE</div></div>
+      <div class="kpi" style="--accent:var(--auto)"><span class="eyebrow">On the latest version</span><div class="val" id="autoLatest">0</div><div class="sub" id="autoLatestSub">&nbsp;</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
         <h2>Portfolio headline</h2>
         <p>All open + closed issues of type Bug, current totals across both projects.</p>
       </div>
@@ -217,11 +254,6 @@
         <div class="sub" id="kpiEscapeRateSub">&nbsp;</div>
         <select id="escapeRangeSelect" style="margin-top:9px; width:100%; font-size:12px; padding:6px 8px;"></select>
       </div>
-      <div class="kpi" style="--accent:var(--auto)">
-        <span class="eyebrow">Found by QA Automation</span>
-        <div class="val" id="kpiQaAuto">15</div>
-        <div class="sub">FW bugs with Issued by = <b style="color:var(--text)">QA Automation</b>, caught by automated test suites before reaching a human tester.</div>
-      </div>
       <div class="kpi" style="--accent:var(--teal)">
         <span class="eyebrow">Firmware-version tagged</span>
         <div class="val" id="kpiVerTagged">28</div>
@@ -233,23 +265,13 @@
   <section>
     <div class="sec-head">
       <div>
-        <h2>Escape rate by month &amp; field completion</h2>
-        <p>Support &divide; categorized bugs, per month &mdash; the number the KPI above draws on when a monthly range is selected. Bar opacity reflects field-completion confidence. Field completion (right) is what makes a given month's rate trustworthy: a month with few bugs tagged is a small, skewed sample.</p>
+        <h2>Escape rate by month</h2>
+        <p>Support &divide; categorized bugs, per month &mdash; the number the KPI above draws on when a monthly range is selected. Faded bars are low-confidence months &mdash; too few bugs had Issued by filled in, so the rate is a small, skewed sample.</p>
       </div>
     </div>
-    <div class="grid2">
-      <div class="card">
-        <h3>Escape rate by month</h3>
-        <div class="chart-wrap" style="height:240px;"><canvas id="monthlyChart"></canvas></div>
-      </div>
-      <div class="card">
-        <h3>Field completion by month</h3>
-        <div class="hint">Share of bugs created that month with Issued by populated at all.</div>
-        <table style="margin-top:4px;">
-          <thead><tr><th>Month</th><th>Bugs created</th><th>Tagged</th><th>Completion</th><th>Escape rate</th></tr></thead>
-          <tbody id="monthlyTableBody"></tbody>
-        </table>
-      </div>
+    <div class="card">
+      <h3>Escape rate by month</h3>
+      <div class="chart-wrap" style="height:260px;"><canvas id="monthlyChart"></canvas></div>
     </div>
   </section>
 
@@ -352,6 +374,52 @@
       </table>
     </div>
   </section>
+
+  <section>
+    <div class="sec-head">
+      <div>
+        <h2>Bugs over time</h2>
+        <p>When the matching bugs were <i>created</i> &mdash; per week, month or year &mdash; plus a year-over-year comparison. The Device and Component filters above always apply; choose below whether to also limit to the selected version.</p>
+      </div>
+    </div>
+    <div class="controls">
+      <div class="ctrl-group">
+        <span class="ctrl-label">Group by</span>
+        <select id="timeGran">
+          <option value="week">Week</option>
+          <option value="month" selected>Month</option>
+          <option value="year">Year</option>
+        </select>
+      </div>
+      <div class="ctrl-group">
+        <span class="ctrl-label">Scope</span>
+        <select id="timeScope">
+          <option value="all" selected>All versions</option>
+          <option value="version">Selected version only</option>
+        </select>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:18px;">
+      <h3 id="timeTitle">Bugs created per month</h3>
+      <div class="hint" id="timeHint">&nbsp;</div>
+      <div class="chart-wrap" style="height:270px;"><canvas id="timeChart"></canvas></div>
+    </div>
+    <div class="grid2">
+      <div class="card">
+        <h3>Year-over-year comparison</h3>
+        <div class="hint">Bugs created in each calendar month, one line per year.</div>
+        <div class="chart-wrap" style="height:260px;"><canvas id="yearChart"></canvas></div>
+      </div>
+      <div class="card">
+        <h3>Totals by year</h3>
+        <div class="hint">Change is versus the previous year in the data. A partial current year will look lower.</div>
+        <table>
+          <thead><tr><th>Year</th><th>Bugs</th><th>Support</th><th>Escape rate</th><th>Change</th></tr></thead>
+          <tbody id="yearTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
 </div>
 
 <!-- ============ ESCAPE RATE ============ -->
@@ -369,11 +437,11 @@
     </div>
     <div class="callout" style="margin-top:14px;">
       <span class="eyebrow">Escape rate by month, moved to the Overview tab</span>
-      The month-by-month chart and field-completion table now live on the <b style="color:var(--text)">Overview</b> tab, right under the portfolio headline &mdash; along with a date-range picker (this month / a specific month / this year / last year / all time) on the headline escape-rate KPI itself, so you're not stuck with a fixed window.
+      The month-by-month chart now lives on the <b style="color:var(--text)">Overview</b> tab, right under the portfolio headline &mdash; along with a date-range picker (this month / a specific month / this year / last year / all time) on the headline escape-rate KPI itself, so you're not stuck with a fixed window.
     </div>
     <div class="callout teal">
       <span class="eyebrow">Recommendation</span>
-      Use <b>trailing-month escape rate</b> (currently <span id="recoRate">42.2%</span>, from <span id="recoMonth">September</span>) as the default view, not the all-time figure &mdash; that's the Overview tab's default. Keep watching field completion each month; once 2&ndash;3 more fully-tagged months land, a rolling 3-month average will be more stable than any single month. The all-time and customizable views below are still useful for historical/audit purposes, just not as the primary KPI.
+      Use <b>trailing-month escape rate</b> (currently <span id="recoRate">42.2%</span>, from <span id="recoMonth">September</span>) as the default view, not the all-time figure &mdash; that's the Overview tab's default. Once 2&ndash;3 more fully-tagged months land, a rolling 3-month average will be more stable than any single month. The all-time and customizable views below are still useful for historical/audit purposes, just not as the primary KPI.
     </div>
   </section>
 
@@ -512,27 +580,6 @@
     </div>
   </section>
 
-  <section>
-    <div class="sec-head">
-      <div>
-        <h2>Bugs by device (firmware-version-tagged)</h2>
-        <p>Firmware-version-tagged bugs grouped by hardware device. Use the toggle to view all versions combined or a single version.</p>
-      </div>
-      <div class="toggle-row" id="devScopeToggle">
-        <button class="active" data-scope="all">All versions</button>
-        <button data-scope="one">Single version</button>
-      </div>
-    </div>
-    <div class="controls" id="devVersionWrap" style="display:none;">
-      <div class="ctrl-group">
-        <span class="ctrl-label">Version</span>
-        <select id="devVersionSelect"></select>
-      </div>
-    </div>
-    <div class="card">
-      <div class="chart-wrap" style="height:320px;"><canvas id="deviceBarChart"></canvas></div>
-    </div>
-  </section>
 
   <section>
     <div class="sec-head">
@@ -842,7 +889,7 @@ function severityColor(pct){ if(pct>=50) return 'var(--red)'; if(pct>=20) return
    chart without doing a full renderDashboard() pass.
    ============================================================ */
 let LATEST, PREVIOUS, verOrder = [], CATS = [];
-let deviceBarChart, componentBarChart, escapeGauge, compareChartInst, monthlyChartInst;
+let deviceBarChart, componentBarChart, escapeGauge, compareChartInst, monthlyChartInst, timeChartInst, yearChartInst;
 
 /* ---------- Version compare (Overview tab, user-selectable pair) ---------- */
 function renderCompare(verA, verB){
@@ -931,7 +978,7 @@ function renderEscapeRangeKpi(range){
       : `${completion}% of ${total} bugs in this range are tagged${lowConf ? ', a low-confidence sample' : ''}.`);
 }
 
-/* ---------- Monthly trend chart + field-completion table (Overview tab) ---------- */
+/* ---------- Monthly trend chart (Overview tab) ---------- */
 function renderMonthlyTrend(){
   if(monthlyChartInst) safeChart(() => monthlyChartInst.destroy());
   monthlyChartInst = safeChart(() => new Chart(document.getElementById('monthlyChart'), {
@@ -955,16 +1002,6 @@ function renderMonthlyTrend(){
       scales:{ y:{beginAtZero:true, max:100, ticks:{callback:(v)=>v+'%'}, grid:{color:'#242A35'}}, x:{grid:{display:false}} }
     }
   }));
-  const tbody = document.getElementById('monthlyTableBody');
-  if(tbody){
-    tbody.innerHTML = MONTHLY.slice().reverse().map(m=>{
-      const pct = m.tagged ? Math.round(m.support / m.tagged * 1000) / 10 : 0;
-      const compClass = m.completion >= 90 ? 'support' : m.completion >= 60 ? 'po' : 'other';
-      const rateLabel = m.lowConfidence ? `${pct}% (low-confidence)` : `${pct}%`;
-      const rateStyle = m.lowConfidence ? 'style="color:var(--dim)"' : 'style="color:var(--text)"';
-      return `<tr><td style="color:var(--text)">${m.month}</td><td class="mono">${fmtN(m.total)}</td><td class="mono">${fmtN(m.tagged)}</td><td><span class="pill ${compClass}">${m.completion}%</span></td><td class="mono" ${rateStyle}>${rateLabel}</td></tr>`;
-    }).join('');
-  }
 }
 
 function recalcEscape(){
@@ -1040,6 +1077,95 @@ function renderVersionExplorer(){
         <td>${i.status}</td>
       </tr>`).join('');
   }
+  renderTimeViews();
+}
+
+
+/* ---------- Version Explorer: bugs over time (week / month / year + YoY) ---------- */
+const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const YEAR_COLORS = ['#6B7385','#5B9EE8','#8E7CE8','#3FB6A8','#E8A33D','#E2604F'];
+function weekStart(iso){
+  const d = new Date(iso+'T00:00:00Z');
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay()+6)%7));
+  return d.toISOString().slice(0,10);
+}
+function bucketKey(iso, gran){
+  return gran==='week' ? weekStart(iso) : gran==='month' ? iso.slice(0,7) : iso.slice(0,4);
+}
+function nextKey(k, gran){
+  if(gran==='year') return String(+k+1);
+  if(gran==='month'){ const [y,m]=k.split('-').map(Number); return m===12 ? (y+1)+'-01' : y+'-'+String(m+1).padStart(2,'0'); }
+  const d = new Date(k+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()+7); return d.toISOString().slice(0,10);
+}
+function keyLabel(k, gran){
+  if(gran==='month'){ const [y,m]=k.split('-'); return MONTH_NAMES[+m-1]+' '+y; }
+  if(gran==='week'){ const d=new Date(k+'T00:00:00Z'); return d.getUTCDate()+' '+MONTH_NAMES[d.getUTCMonth()]+' '+String(d.getUTCFullYear()).slice(2); }
+  return k;
+}
+function renderTimeViews(){
+  const gran = document.getElementById('timeGran').value;
+  const scope = document.getElementById('timeScope').value;
+  const v = document.getElementById('verSelect').value;
+  const devF = document.getElementById('verDeviceFilter').value;
+  const compF = document.getElementById('verComponentFilter').value;
+  let list = scope==='version' ? issuesForVersion(v) : ISSUES.slice();
+  if(devF) list = list.filter(i=>i.device.includes(devF));
+  if(compF) list = list.filter(i=>i.component.includes(compF));
+  const dated = list.filter(i=>i.created);
+  const undated = list.length - dated.length;
+  const granName = {week:'week', month:'month', year:'year'}[gran];
+  document.getElementById('timeTitle').textContent = `Bugs created per ${granName}` + (scope==='version' ? ` \u2014 ${v}` : ' \u2014 all versions');
+  document.getElementById('timeHint').textContent = dated.length
+    ? `${dated.length} bugs with a creation date` + (undated ? ` (${undated} without one are left out \u2014 refresh to load dates)` : '') + (gran==='week' ? '. Weeks start on Monday; showing the most recent 52.' : '.') + ' Only bugs with a Firmware Version set are included.'
+    : 'No creation dates in the current data yet \u2014 they arrive with the next weekly build or a Live refresh.';
+
+  // buckets, gap-filled
+  const counts = {}, supp = {};
+  dated.forEach(i=>{ const k=bucketKey(i.created,gran); counts[k]=(counts[k]||0)+1; if(i.issuedBy==='Support') supp[k]=(supp[k]||0)+1; });
+  let keys = Object.keys(counts).sort();
+  if(keys.length){
+    const all=[]; for(let k=keys[0]; k<=keys[keys.length-1]; k=nextKey(k,gran)) all.push(k);
+    keys = gran==='week' ? all.slice(-52) : all;
+  }
+  if(timeChartInst) safeChart(() => timeChartInst.destroy());
+  timeChartInst = safeChart(() => new Chart(document.getElementById('timeChart'), {
+    type:'bar',
+    data:{ labels: keys.map(k=>keyLabel(k,gran)), datasets:[
+      {label:'Support-reported', data: keys.map(k=>supp[k]||0), backgroundColor: COLORS.support, borderRadius:3, stack:'s'},
+      {label:'Other sources',   data: keys.map(k=>(counts[k]||0)-(supp[k]||0)), backgroundColor: COLORS.dev, borderRadius:3, stack:'s'},
+    ]},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom'}, tooltip:{mode:'index'} },
+      scales:{ y:{beginAtZero:true, stacked:true, ticks:{precision:0}, grid:{color:'#242A35'}}, x:{stacked:true, grid:{display:false}, ticks:{maxRotation:60, autoSkip:true}} }
+    }
+  }));
+
+  // year over year (calendar months, one line per year)
+  const years = Array.from(new Set(dated.map(i=>i.created.slice(0,4)))).sort();
+  const byYM = {};
+  dated.forEach(i=>{ const y=i.created.slice(0,4), m=+i.created.slice(5,7)-1; (byYM[y]=byYM[y]||Array(12).fill(0))[m]++; });
+  if(yearChartInst) safeChart(() => yearChartInst.destroy());
+  yearChartInst = safeChart(() => new Chart(document.getElementById('yearChart'), {
+    type:'line',
+    data:{ labels: MONTH_NAMES, datasets: years.map((y,idx)=>({
+      label:y, data:byYM[y], borderColor:YEAR_COLORS[(years.length-1-idx)%YEAR_COLORS.length],
+      backgroundColor:'transparent', tension:.25, pointRadius:3, borderWidth: idx===years.length-1?3:2,
+    }))},
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'bottom'} },
+      scales:{ y:{beginAtZero:true, ticks:{precision:0}, grid:{color:'#242A35'}}, x:{grid:{display:false}} }
+    }
+  }));
+  const tb = document.getElementById('yearTableBody');
+  if(!years.length){ tb.innerHTML = '<tr><td colspan="5" class="empty-row">No dated bugs for this selection.</td></tr>'; return; }
+  tb.innerHTML = years.map((y,idx)=>{
+    const tot = byYM[y].reduce((a,b)=>a+b,0);
+    const sup = dated.filter(i=>i.created.startsWith(y) && i.issuedBy==='Support').length;
+    const prevTot = idx ? byYM[years[idx-1]].reduce((a,b)=>a+b,0) : null;
+    const chg = prevTot ? Math.round((tot-prevTot)/prevTot*100) : null;
+    const chgTxt = chg===null ? '\u2014' : (chg>0?'+':'')+chg+'%';
+    return `<tr><td style="color:var(--text)">${y}</td><td class="mono">${tot}</td><td class="mono">${sup}</td><td class="mono">${tot?Math.round(sup/tot*1000)/10:0}%</td><td class="mono">${chgTxt}</td></tr>`;
+  }).reverse().join('');
 }
 
 function renderDeviceBar(scope, version){
@@ -1111,7 +1237,7 @@ function renderDashboard(){
   makePie('fwPie', FW_ISSUED);
   makePie('fePie', FE_ISSUED);
 
-  // ---- Overview: escape-rate date range + monthly trend / field-completion table ----
+  // ---- Overview: escape-rate date range + monthly trend ----
   populateEscapeRangeOptions();
   renderEscapeRangeKpi(document.getElementById('escapeRangeSelect').value);
   renderMonthlyTrend();
@@ -1237,7 +1363,7 @@ function hydrateStaticText(){
   setText('supportStatDistinct', fmt(SUPPORT_STATS.distinctDevices));
 
   setText('kpiAssigneeChanges', fmt(CHANGELOG_STATS.assigneeChanges));
-  setText('kpiAssigneeChangesSub', `Across ${fmt(CHANGELOG_STATS.scopeTotal)} FW + FE bugs scanned.`);
+  setText('kpiAssigneeChangesSub', CHANGELOG_STATS.historyItemsSeen===undefined ? `Across ${fmt(CHANGELOG_STATS.scopeTotal)} FW + FE bugs scanned.` : `Across ${fmt(CHANGELOG_STATS.scopeTotal)} FW + FE bugs; ${fmt(CHANGELOG_STATS.changelogEntriesSeen)} changelogs read, ${fmt(CHANGELOG_STATS.historyItemsSeen)} change records seen.` + (CHANGELOG_STATS.historyItemsSeen===0 ? ' (0 records = Jira returned no changelog data — check the relay/endpoint.)' : ''));
   setText('kpiBugsReassigned', fmt(CHANGELOG_STATS.issuesWithAssigneeChange));
   setText('kpiBugsReassignedSub', `${CHANGELOG_STATS.scopeTotal ? Math.round(CHANGELOG_STATS.issuesWithAssigneeChange/CHANGELOG_STATS.scopeTotal*1000)/10 : 0}% of bugs scanned had the Assignee changed at least once.`);
   setText('kpiQaReopens', fmt(CHANGELOG_STATS.qaToOpenEvents));
@@ -1246,11 +1372,27 @@ function hydrateStaticText(){
   setText('kpiQaReopenIssuesSub', `${CHANGELOG_STATS.scopeTotal ? Math.round(CHANGELOG_STATS.qaToOpenIssues/CHANGELOG_STATS.scopeTotal*1000)/10 : 0}% of bugs scanned were sent back from QA at least once.`);
 
   renderProcessSignalsTables();
+  renderAutomationStats();
 }
 
 /* Per-issue detail tables behind the Process signals KPIs, each row linking
    straight to the real Jira issue so "why did this bounce" is one click
    away instead of a number with no way to dig in. */
+
+function renderAutomationStats(){
+  const set=(id,v)=>{const e=document.getElementById(id); if(e) e.innerHTML=v;};
+  const fw=FW_ISSUED['QA Automation']||0, fe=FE_ISSUED['QA Automation']||0, tot=fw+fe;
+  const internal=['QA','QA Automation','PO','Development','Integrations','Other'].reduce((a,k)=>a+(FW_ISSUED[k]||0)+(FE_ISSUED[k]||0),0);
+  set('autoTotal', fmtN(tot));
+  set('autoTotalSub', 'FW + FE bugs with Issued by = QA Automation.');
+  set('autoShare', (internal?Math.round(tot/internal*1000)/10:0)+'<span class="unit">%</span>');
+  set('autoShareSub', `${fmtN(tot)} of ${fmtN(internal)} bugs caught before release (everything tagged except Support).`);
+  set('autoByProject', `${fmtN(fw)} / ${fmtN(fe)}`);
+  const latest=issuesForVersion(LATEST).filter(i=>i.issuedBy==='QA Automation').length;
+  set('autoLatest', fmtN(latest));
+  set('autoLatestSub', `Firmware-version-tagged FW bugs on ${LATEST} found by automation.`);
+}
+
 function renderProcessSignalsTables(){
   const jiraLink = (key) => `<a href="${JIRA_BROWSE_BASE}${key}" target="_blank" rel="noopener" style="color:var(--amber); text-decoration:none;">${key} &#8599;</a>`;
 
@@ -1275,6 +1417,8 @@ function renderProcessSignalsTables(){
 document.getElementById('verSelect').addEventListener('change', renderVersionExplorer);
 document.getElementById('verDeviceFilter').addEventListener('change', renderVersionExplorer);
 document.getElementById('verComponentFilter').addEventListener('change', renderVersionExplorer);
+document.getElementById('timeGran').addEventListener('change', renderTimeViews);
+document.getElementById('timeScope').addEventListener('change', renderTimeViews);
 document.getElementById('categoryList').addEventListener('change', recalcEscape);
 document.getElementById('devScopeToggle').addEventListener('click', e=>{
   if(e.target.tagName!=='BUTTON') return;
@@ -1420,14 +1564,19 @@ renderDashboard();
   // "In Development" status here).
   const QA_REOPEN_TARGETS = ['Open', 'In Progress'];
   function computeChangelogStats(issueChangeLogs, scopeTotal, issueKeyById){
-    let assigneeChanges = 0, qaToOpenEvents = 0;
+    let assigneeChanges = 0, qaToOpenEvents = 0, changelogEntriesSeen = 0, historyItemsSeen = 0;
     const reassignedCounts = new Map();
     const qaReturnedCounts = new Map();
     for(const entry of issueChangeLogs){
       const id = entry.issueId || entry.id;
       const key = (issueKeyById && issueKeyById[id]) || id;
       const histories = entry.changeHistories || entry.histories || [];
-      for(const item of histories){
+      // bulkfetch returns either flat change items or history entries that
+      // each wrap an items[] array (like the classic changelog) — flatten both.
+      const flat = [];
+      for(const h of histories){ if(Array.isArray(h.items)) flat.push(...h.items); else flat.push(h); }
+      changelogEntriesSeen++; historyItemsSeen += flat.length;
+      for(const item of flat){
         const field = item.field || item.fieldId;
         const fromVal = item.fromString !== undefined ? item.fromString : item.from;
         const toVal = item.toString !== undefined ? item.toString : item.to;
@@ -1449,7 +1598,7 @@ renderDashboard();
       .sort((a,b)=> b.count-a.count || a.key.localeCompare(b.key));
     return {
       stats: {
-        scopeTotal, assigneeChanges,
+        scopeTotal, assigneeChanges, changelogEntriesSeen, historyItemsSeen,
         issuesWithAssigneeChange: reassignedIssues.length,
         qaToOpenEvents,
         qaToOpenIssues: qaReturnedIssues.length,
@@ -1520,7 +1669,7 @@ renderDashboard();
   }
   async function buildFirmwareVersionIssues(proxyUrl, auth){
     const issues = await jiraSearch(proxyUrl, auth, `project = FW AND issuetype = Bug AND cf[13320] is not EMPTY`,
-      ['summary', F_DEVICE, F_ISSUED_BY, F_FW_VERSION, F_COMPONENT, 'status']);
+      ['summary', F_DEVICE, F_ISSUED_BY, F_FW_VERSION, F_COMPONENT, 'status', 'created']);
     return issues.map(issue=>{
       const f = issue.fields;
       return {
@@ -1530,6 +1679,7 @@ renderDashboard();
         versions: fieldOptionValues(f[F_FW_VERSION]),
         issuedBy: f[F_ISSUED_BY] ? f[F_ISSUED_BY].value : 'Unspecified',
         status: f.status ? f.status.name : 'Unknown',
+        created: f.created ? f.created.slice(0,10) : '',
       };
     });
   }
