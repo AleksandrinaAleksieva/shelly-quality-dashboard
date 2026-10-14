@@ -1274,7 +1274,12 @@ function renderDashboard(){
   document.getElementById('fetchedAt').textContent = new Date(FETCHED_AT_ISO).toLocaleString(undefined,{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
   const liveDot = document.getElementById('liveDot'), liveLabel = document.getElementById('liveLabel');
   if(IS_LIVE){ liveDot.classList.remove('off'); liveLabel.textContent = 'Live from your Jira'; }
-  else { liveDot.classList.add('off'); liveLabel.textContent = 'Weekly snapshot'; }
+  else {
+    liveDot.classList.add('off');
+    const ageMin = Math.max(0, Math.round((Date.now() - new Date(FETCHED_AT_ISO).getTime())/60000));
+    const ago = ageMin < 60 ? ageMin + ' min ago' : ageMin < 2880 ? Math.round(ageMin/60) + ' h ago' : Math.round(ageMin/1440) + ' days ago';
+    liveLabel.textContent = 'Auto-refreshed from Jira ' + ago + (ageMin > 2880 ? ' \u2014 stale, scheduled refresh may be failing' : '');
+  }
 
   // "Latest" skips dev-branch builds (patch 99) — see isDevBranch above.
   // Falls back to the raw newest version if literally everything is a dev
@@ -1542,7 +1547,7 @@ renderDashboard();
     try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(c)); }catch(e){ /* private mode etc — silently skip persistence */ }
   }
   function clearCreds(){
-    try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+    try{ localStorage.removeItem(STORAGE_KEY); localStorage.removeItem('sqd-live-snapshot-v1'); }catch(e){}
   }
   function setStatus(kind, msg){
     statusEl.className = 'modal-status show ' + kind;
@@ -1806,7 +1811,14 @@ renderDashboard();
     const issues = await buildFirmwareVersionIssues(proxyUrl, auth);
     const { list: supportByDevice, stats: supportStats } = await buildSupportByDevice(proxyUrl, auth);
     const monthly = await buildMonthlyTrend(proxyUrl, auth, 24);
-    const { stats: changelogStats, reassignedIssues, qaReturnedIssues } = await buildChangelogStats(proxyUrl, auth);
+    let changelogStats, reassignedIssues = [], qaReturnedIssues = [];
+    try{
+      ({ stats: changelogStats, reassignedIssues, qaReturnedIssues } = await buildChangelogStats(proxyUrl, auth));
+    }catch(err){
+      // Process signals are the newest, least-verified part — don't let them block the rest of the refresh.
+      console.warn('Changelog step failed:', err.message);
+      changelogStats = { scopeTotal:0, assigneeChanges:0, issuesWithAssigneeChange:0, qaToOpenEvents:0, qaToOpenIssues:0, changelogEntriesSeen:0, historyItemsSeen:0, error: err.message };
+    }
     const versionSet = new Set();
     issues.forEach(i => i.versions.forEach(v => versionSet.add(v)));
     const mainlineOrder = Array.from(versionSet).sort(compareVersions);
@@ -1822,7 +1834,37 @@ renderDashboard();
     FETCHED_AT_ISO = new Date().toISOString();
     IS_LIVE = true;
     renderDashboard();
+    persistSnapshot();
   }
+
+  // ---- Remember the last successful live refresh in THIS browser, so a page
+  // reload shows it instantly (the full refresh takes a minute or so) instead
+  // of dropping back to the weekly snapshot until the background refresh ends.
+  const SNAP_KEY = 'sqd-live-snapshot-v1';
+  function persistSnapshot(){
+    try{
+      localStorage.setItem(SNAP_KEY, JSON.stringify({
+        FETCHED_AT_ISO, FW_ISSUED, FE_ISSUED, FW_TOTAL, FE_TOTAL, ISSUES, SUPPORT_BY_DEVICE,
+        SUPPORT_STATS, MAINLINE_ORDER, MONTHLY, CHANGELOG_STATS, REASSIGNED_ISSUES, QA_RETURNED_ISSUES
+      }));
+    }catch(e){ /* storage full/blocked — fine, just no instant restore */ }
+  }
+  function restoreSnapshot(){
+    try{
+      const s = JSON.parse(localStorage.getItem(SNAP_KEY) || 'null');
+      if(!s || !s.FETCHED_AT_ISO || !Array.isArray(s.ISSUES) || !Array.isArray(s.MONTHLY)) return false;
+      // Only use it if it is newer than the build baked into the page.
+      if(new Date(s.FETCHED_AT_ISO) <= new Date(FETCHED_AT_ISO)) return false;
+      FETCHED_AT_ISO = s.FETCHED_AT_ISO; FW_ISSUED = s.FW_ISSUED; FE_ISSUED = s.FE_ISSUED;
+      FW_TOTAL = s.FW_TOTAL; FE_TOTAL = s.FE_TOTAL; ISSUES = s.ISSUES; SUPPORT_BY_DEVICE = s.SUPPORT_BY_DEVICE;
+      SUPPORT_STATS = s.SUPPORT_STATS; MAINLINE_ORDER = s.MAINLINE_ORDER; MONTHLY = s.MONTHLY;
+      CHANGELOG_STATS = s.CHANGELOG_STATS; REASSIGNED_ISSUES = s.REASSIGNED_ISSUES || []; QA_RETURNED_ISSUES = s.QA_RETURNED_ISSUES || [];
+      IS_LIVE = true;
+      renderDashboard();
+      return true;
+    }catch(e){ return false; }
+  }
+  function setLiveLabel(text){ const el = document.getElementById('liveLabel'); if(el) el.textContent = text; }
 
   saveBtn.addEventListener('click', async ()=>{
     const email = emailEl.value.trim(), token = tokenEl.value.trim(), proxyUrl = proxyEl.value.trim();
@@ -1847,8 +1889,11 @@ renderDashboard();
   // this is the "don't make me sign in every time" behavior, scoped to this browser only.
   const saved = loadCreds();
   if(saved && saved.email && saved.token && saved.proxyUrl){
+    const restored = restoreSnapshot();
+    setLiveLabel(restored ? 'Live (last refresh) \u2014 updating from Jira\u2026' : 'Updating from Jira\u2026');
     liveRefresh(saved.email, saved.token, saved.proxyUrl).catch(err=>{
-      console.warn('Silent live refresh failed, staying on weekly snapshot:', err.message);
+      console.warn('Silent live refresh failed:', err.message);
+      setLiveLabel((restored ? 'Live (last refresh)' : 'Scheduled snapshot') + ' \u2014 Jira refresh failed: ' + err.message.slice(0,90) + ' (open \u2699 to retry)');
     });
   }
 })();
